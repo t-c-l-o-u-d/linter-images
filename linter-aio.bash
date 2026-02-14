@@ -150,6 +150,91 @@ detect_images() {
     done
 }
 
+# extensions we have linters for
+SUPPORTED_EXT_RE="^(py|css|scss|html|js|mjs|cjs|json|yml|yaml|vim|service|timer|socket|path|mount|target|slice|md)$"
+# mimetypes we have linters for (bash is detected via shebang + mimetype)
+SUPPORTED_MIME_RE="^text/x-shellscript$"
+# non-code files to silently skip
+SKIP_EXT_RE="^(txt|lock|toml|cfg|ini|conf|gitignore|gitattributes|editorconfig|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$"
+# known filenames we handle
+SUPPORTED_NAMES_RE="^(Containerfile|vimrc|ansible\.cfg|site\.yml|site\.yaml)$"
+
+detect_unsupported() {
+    local -A unsupported=()
+
+    while IFS= read -r f; do
+        local base
+        base="$(basename "${f}")"
+
+        # skip known supported filenames
+        if [[ "${base}" =~ ${SUPPORTED_NAMES_RE} ]]; then
+            continue
+        fi
+
+        # check extension
+        local ext=""
+        if [[ "${f}" == *.* ]]; then
+            ext="${f##*.}"
+        fi
+
+        # skip if extension is supported
+        if [[ -n "${ext}" ]] && [[ "${ext}" =~ ${SUPPORTED_EXT_RE} ]]; then
+            continue
+        fi
+
+        # skip known non-code extensions
+        if [[ -n "${ext}" ]] && [[ "${ext}" =~ ${SKIP_EXT_RE} ]]; then
+            continue
+        fi
+
+        # check mimetype
+        local mime
+        mime="$(file --brief --mime-type "${f}" 2>/dev/null)" || continue
+
+        # skip if mimetype is supported (e.g. extensionless shell scripts)
+        if [[ "${mime}" =~ ${SUPPORTED_MIME_RE} ]]; then
+            continue
+        fi
+
+        # skip binary files
+        if [[ "${mime}" == application/octet-stream ]] || [[ "${mime}" == inode/* ]] || [[ "${mime}" == image/* ]]; then
+            continue
+        fi
+
+        # check shebang for extensionless scripts
+        if [[ -z "${ext}" ]]; then
+            local shebang
+            shebang="$(head --lines=1 "${f}" 2>/dev/null)" || continue
+            if [[ "${shebang}" =~ ^#!.*bash ]]; then
+                continue
+            fi
+            # flag other interpreters we don't support
+            if [[ "${shebang}" =~ ^#! ]]; then
+                local interp
+                interp="${shebang##*[\\/]}"
+                interp="${interp%% *}"
+                unsupported["${base} (${interp})"]=1
+                continue
+            fi
+        fi
+
+        # report by extension or filename
+        if [[ -n "${ext}" ]]; then
+            unsupported[".${ext}"]=1
+        else
+            unsupported["${base} (${mime})"]=1
+        fi
+    done < <(git ls-files)
+
+    if [[ ${#unsupported[@]} -gt 0 ]]; then
+        echo ""
+        echo "Note: no linter available for these file types:"
+        for desc in $(printf '%s\n' "${!unsupported[@]}" | sort); do
+            echo "  - ${desc}"
+        done
+    fi
+}
+
 run_container() {
     local image_name="$1"
     local command="$2"
@@ -180,6 +265,8 @@ echo "Detected linter images:"
 for img in "${images[@]}"; do
     echo "  - ${img}"
 done
+
+detect_unsupported
 
 errors=0
 passed=0

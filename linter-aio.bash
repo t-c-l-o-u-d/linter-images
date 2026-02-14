@@ -314,30 +314,33 @@ fi
 }
 
 # --- Main ---
+# Wrapped in a function so `curl | bash` reads the entire script before
+# executing anything — prevents partial-read failures over the pipe.
 
-MODE="${1:-lint}"
+main() {
+    MODE="${1:-lint}"
 
-if [[ "$MODE" == "install" ]]; then
-    install_hook
-fi
+    if [[ "$MODE" == "install" ]]; then
+        install_hook
+    fi
 
-if [[ "$MODE" != "lint" && "$MODE" != "fix" ]]; then
-    echo "Usage: linter-aio.bash [lint|fix|install]"
-    echo "  lint    — run all detected linters (default)"
-    echo "  fix     — auto-fix with supported linters"
-    echo "  install — install a pre-commit hook in the current repo"
-    exit 1
-fi
+    if [[ "$MODE" != "lint" && "$MODE" != "fix" ]]; then
+        echo "Usage: linter-aio.bash [lint|fix|install]"
+        echo "  lint    — run all detected linters (default)"
+        echo "  fix     — auto-fix with supported linters"
+        echo "  install — install a pre-commit hook in the current repo"
+        exit 1
+    fi
 
-git rev-parse --git-dir > /dev/null 2>&1 || {
-    echo "ERROR: Not a git repository." >&2
-    echo "Run this script from inside a git-managed project." >&2
-    exit 1
-}
+    git rev-parse --git-dir > /dev/null 2>&1 || {
+        echo "ERROR: Not a git repository." >&2
+        echo "Run this script from inside a git-managed project." >&2
+        exit 1
+    }
 
-RUNTIME="$(detect_runtime)"
+    RUNTIME="$(detect_runtime)"
 
-cat << 'EOF'
+    cat << 'EOF'
 ===========================================
 ========= linter-images: tcloud ==========
 ===========================================
@@ -350,75 +353,78 @@ cat << 'EOF'
 ===== https://github.com/t-c-l-o-u-d =====
 ===========================================
 EOF
-echo ""
+    echo ""
 
-echo "Scanning workspace for file types..."
-mapfile -t images < <(detect_images)
+    echo "Scanning workspace for file types..."
+    mapfile -t images < <(detect_images)
 
-if [[ ${#images[@]} -eq 0 ]]; then
-    echo "No recognized file types found."
-    exit 0
-fi
+    if [[ ${#images[@]} -eq 0 ]]; then
+        echo "No recognized file types found."
+        exit 0
+    fi
 
-echo ""
-echo "Detected linter images:"
-for img in "${images[@]}"; do
-    echo "  - ${img}"
-done
-
-detect_unsupported
-
-errors=0
-passed=0
-
-if [[ "$MODE" == "fix" ]]; then
+    echo ""
+    echo "Detected linter images:"
     for img in "${images[@]}"; do
-        if [[ -n "${FIX_SUPPORTED[${img}]+x}" ]]; then
-            if run_container "$img" "/usr/local/bin/fix"; then
-                echo "PASS: ${img} fix"
+        echo "  - ${img}"
+    done
+
+    detect_unsupported
+
+    local errors=0
+    local passed=0
+
+    if [[ "$MODE" == "fix" ]]; then
+        for img in "${images[@]}"; do
+            if [[ -n "${FIX_SUPPORTED[${img}]+x}" ]]; then
+                if run_container "$img" "/usr/local/bin/fix"; then
+                    echo "PASS: ${img} fix"
+                    passed=$((passed + 1))
+                else
+                    echo "FAIL: ${img} fix"
+                    errors=$((errors + 1))
+                fi
+            fi
+        done
+
+        echo ""
+        echo "==========================================="
+        echo "  Fix Summary"
+        echo "==========================================="
+        echo "  Fixed:   ${passed}"
+        echo "  Errors:  ${errors}"
+        echo "==========================================="
+    else
+        for img in "${images[@]}"; do
+            if run_container "$img" "/usr/local/bin/lint"; then
+                echo "PASS: ${img}"
                 passed=$((passed + 1))
             else
-                echo "FAIL: ${img} fix"
+                echo "FAIL: ${img}"
                 errors=$((errors + 1))
             fi
-        fi
-    done
+        done
 
-    echo ""
-    echo "==========================================="
-    echo "  Fix Summary"
-    echo "==========================================="
-    echo "  Fixed:   ${passed}"
-    echo "  Errors:  ${errors}"
-    echo "==========================================="
-else
-    for img in "${images[@]}"; do
-        if run_container "$img" "/usr/local/bin/lint"; then
-            echo "PASS: ${img}"
-            passed=$((passed + 1))
-        else
-            echo "FAIL: ${img}"
-            errors=$((errors + 1))
-        fi
-    done
+        echo ""
+        echo "==========================================="
+        echo "  Lint Summary"
+        echo "==========================================="
+        echo "  Passed:  ${passed}"
+        echo "  Failed:  ${errors}"
+        echo "  Total:   ${#images[@]}"
+        echo "==========================================="
+    fi
 
-    echo ""
-    echo "==========================================="
-    echo "  Lint Summary"
-    echo "==========================================="
-    echo "  Passed:  ${passed}"
-    echo "  Failed:  ${errors}"
-    echo "  Total:   ${#images[@]}"
-    echo "==========================================="
-fi
+    if [[ ${errors} -gt 0 ]]; then
+        echo ""
+        echo "${MODE^} failed with ${errors} error(s)"
+        exit 1
+    fi
 
-if [[ ${errors} -gt 0 ]]; then
-    echo ""
-    echo "${MODE^} failed with ${errors} error(s)"
-    exit 1
-fi
+    if [[ "$MODE" == "fix" ]]; then
+        echo ""
+        echo "Done. Run lint to verify."
+    fi
+}
 
-if [[ "$MODE" == "fix" ]]; then
-    echo ""
-    echo "Done. Run lint to verify."
-fi
+main "$@"

@@ -60,6 +60,9 @@ fi
 echo ""
 echo "Running shellharden..."
 if ! shellharden --check "${bash_scripts[@]}"; then
+    for f in "${bash_scripts[@]}"; do
+        diff --unified "$f" <(shellharden "$f") || true
+    done
     echo "FAIL: shellharden"
     errors=$((errors + 1))
 else

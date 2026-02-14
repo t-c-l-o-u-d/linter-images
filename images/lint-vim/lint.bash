@@ -27,21 +27,22 @@ fi
 
 errors=0
 
-# vint auto-discovers .vintrc.yaml from cwd; symlink if in .linter/
-vint_link=""
+# vint auto-discovers .vintrc.yaml from cwd; copy to tmpdir to avoid
+# writing to the (read-only) workspace mount
+vint_dir="/workspace"
 if [[ -f .linter/.vintrc.yaml ]] && [[ ! -f .vintrc.yaml ]]; then
-    ln --symbolic .linter/.vintrc.yaml .vintrc.yaml
-    vint_link=1
+    vint_dir="$(mktemp --directory)"
+    cp .linter/.vintrc.yaml "${vint_dir}/.vintrc.yaml"
 fi
-cleanup_vint() {
-    if [[ -n "$vint_link" ]]; then
-        rm --force .vintrc.yaml
-    fi
-}
-trap cleanup_vint EXIT
+
+# absolute paths so vint works from any cwd
+vint_files=()
+for f in "${vim_files[@]}"; do
+    vint_files+=("/workspace/${f}")
+done
 
 echo "Running vint..."
-if ! vint "${vim_files[@]}"; then
+if ! (cd "$vint_dir" && vint "${vint_files[@]}"); then
     echo "FAIL: vint"
     errors=$((errors + 1))
 else

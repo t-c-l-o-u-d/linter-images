@@ -1,0 +1,196 @@
+#!/usr/bin/env bash
+# GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
+set -euo pipefail
+
+REGISTRY="ghcr.io/t-c-l-o-u-d/linter-images"
+
+# images that support fix mode
+declare -A FIX_SUPPORTED=(
+    [lint-bash]=1
+    [lint-css]=1
+    [lint-javascript]=1
+    [lint-python]=1
+)
+
+MODE="${1:-lint}"
+
+if [[ "${MODE}" != "lint" && "${MODE}" != "fix" ]]; then
+    echo "Usage: lint [lint|fix]"
+    echo "  lint  — run all detected linters (default)"
+    echo "  fix   — auto-fix with supported linters"
+    exit 1
+fi
+
+cat << 'EOF'
+===========================================
+========= linter-images: tcloud ==========
+===========================================
+       _       _                 _
+      | |_ ___| | ___  _   _  __| |
+      | __/ __| |/ _ \| | | |/ _` |
+      | || (__| | (_) | |_| | (_| |
+       \__\___|_|\___/ \__,_|\__,_|
+===========================================
+===== https://github.com/t-c-l-o-u-d =====
+===========================================
+EOF
+echo ""
+
+detect_images() {
+    local -A needed=()
+
+    # python
+    if git ls-files '*.py' | grep --quiet .; then
+        needed[lint-python]=1
+    fi
+
+    # bash
+    local bash_found=0
+    while IFS= read -r f; do
+        if [[ "$(file --brief --mime-type "$f")" == "text/x-shellscript" ]]; then
+            bash_found=1
+            break
+        fi
+    done < <(grep --recursive --files-with-matches --exclude-dir=.git '^#!.*bash' . 2>/dev/null)
+    if [[ "${bash_found}" -eq 1 ]]; then
+        needed[lint-bash]=1
+    fi
+
+    # css
+    if git ls-files '*.css' '*.scss' | grep --quiet .; then
+        needed[lint-css]=1
+    fi
+
+    # html
+    if git ls-files '*.html' | grep --quiet .; then
+        needed[lint-html]=1
+    fi
+
+    # javascript
+    if git ls-files '*.js' '*.mjs' '*.cjs' | grep --quiet .; then
+        needed[lint-javascript]=1
+    fi
+
+    # json
+    if git ls-files '*.json' | grep --quiet .; then
+        needed[lint-json]=1
+    fi
+
+    # yaml
+    if git ls-files '*.yml' '*.yaml' | grep --quiet .; then
+        needed[lint-yaml]=1
+    fi
+
+    # vim
+    if git ls-files '*.vim' 'vimrc' '*/vimrc' | grep --quiet .; then
+        needed[lint-vim]=1
+    fi
+
+    # systemd
+    if git ls-files '*.service' '*.timer' '*.socket' '*.path' '*.mount' '*.target' '*.slice' | grep --quiet .; then
+        needed[lint-systemd]=1
+    fi
+
+    # markdown
+    if git ls-files '*.md' | grep --quiet .; then
+        needed[lint-markdown]=1
+    fi
+
+    # containerfile
+    if git ls-files 'Containerfile' '**/Containerfile' | grep --quiet .; then
+        needed[lint-containerfile]=1
+    fi
+
+    # ansible
+    if [[ -d "roles" ]] || [[ -f "ansible.cfg" ]] || [[ -f "site.yml" ]] || [[ -f "site.yaml" ]] || git ls-files 'playbooks/*.yml' 'playbooks/*.yaml' | grep --quiet .; then
+        needed[lint-ansible]=1
+    fi
+
+    for image in $(printf '%s\n' "${!needed[@]}" | sort); do
+        echo "${image}"
+    done
+}
+
+run_container() {
+    local image_name="$1"
+    local command="$2"
+    local full_image="${REGISTRY}/${image_name}:latest"
+
+    echo ""
+    echo "-------------------------------------------"
+    echo "  ${image_name} :: ${command##*/}"
+    echo "-------------------------------------------"
+
+    podman run \
+        --rm \
+        --volume "$(pwd)":/workspace \
+        "${full_image}" \
+        "${command}"
+}
+
+echo "Scanning workspace for file types..."
+mapfile -t images < <(detect_images)
+
+if [[ ${#images[@]} -eq 0 ]]; then
+    echo "No recognized file types found."
+    exit 0
+fi
+
+echo ""
+echo "Detected linter images:"
+for img in "${images[@]}"; do
+    echo "  - ${img}"
+done
+
+errors=0
+passed=0
+
+if [[ "${MODE}" == "fix" ]]; then
+    for img in "${images[@]}"; do
+        if [[ -n "${FIX_SUPPORTED[${img}]+x}" ]]; then
+            if run_container "${img}" "/usr/local/bin/fix"; then
+                echo "PASS: ${img} fix"
+                passed=$((passed + 1))
+            else
+                echo "FAIL: ${img} fix"
+                errors=$((errors + 1))
+            fi
+        fi
+    done
+
+    echo ""
+    echo "==========================================="
+    echo "  Fix Summary"
+    echo "==========================================="
+    echo "  Fixed:   ${passed}"
+    echo "  Errors:  ${errors}"
+    echo "==========================================="
+else
+    for img in "${images[@]}"; do
+        if run_container "${img}" "/usr/local/bin/lint"; then
+            echo "PASS: ${img}"
+            passed=$((passed + 1))
+        else
+            echo "FAIL: ${img}"
+            errors=$((errors + 1))
+        fi
+    done
+
+    echo ""
+    echo "==========================================="
+    echo "  Lint Summary"
+    echo "==========================================="
+    echo "  Passed:  ${passed}"
+    echo "  Failed:  ${errors}"
+    echo "  Total:   ${#images[@]}"
+    echo "==========================================="
+fi
+
+if [[ ${errors} -gt 0 ]]; then
+    echo ""
+    echo "${MODE^} failed with ${errors} error(s)"
+    exit 1
+fi
+
+echo ""
+echo "Done. Run lint to verify."

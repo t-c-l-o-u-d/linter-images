@@ -42,21 +42,17 @@ if [[ ${#images[@]} -eq 0 ]]; then
 fi
 
 echo ""
-echo "Detected linter images to run:"
+echo "Detected images with fix support:"
 for img in "${images[@]}"; do
     if [[ -n "${FIX_SUPPORTED[${img}]+x}" ]]; then
-        echo "  - ${img} (fix + lint)"
-    else
-        echo "  - ${img} (lint only)"
+        echo "  - ${img}"
     fi
 done
 
 errors=0
 fixed=0
-linted=0
 
 for img in "${images[@]}"; do
-    # run fix first if supported
     if [[ -n "${FIX_SUPPORTED[${img}]+x}" ]]; then
         if run_container "${img}" "/usr/local/bin/fix"; then
             echo "PASS: ${img} fix"
@@ -66,31 +62,21 @@ for img in "${images[@]}"; do
             errors=$((errors + 1))
         fi
     fi
-
-    # always lint
-    if run_container "${img}" "/usr/local/bin/lint"; then
-        echo "PASS: ${img} lint"
-        linted=$((linted + 1))
-    else
-        echo "FAIL: ${img} lint"
-        errors=$((errors + 1))
-    fi
 done
 
 echo ""
 echo "==========================================="
-echo "  Fix + Lint Summary"
+echo "  Fix Summary"
 echo "==========================================="
 echo "  Fixed:   ${fixed}"
-echo "  Linted:  ${linted} / ${#images[@]}"
 echo "  Errors:  ${errors}"
 echo "==========================================="
 
 if [[ ${errors} -gt 0 ]]; then
     echo ""
-    echo "Fix+lint failed with ${errors} error(s)"
+    echo "Fixing failed with ${errors} error(s)"
     exit 1
 fi
 
 echo ""
-echo "Done. All fixes applied and lints passed."
+echo "Done. Run lint to verify."

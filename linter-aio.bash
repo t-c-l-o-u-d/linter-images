@@ -50,7 +50,9 @@ detect_images() {
             bash_found=1
             break
         fi
-    done < <(grep --recursive --files-with-matches --exclude-dir=.git '^#!.*bash' . 2>/dev/null)
+    done < <(git ls-files | while IFS= read -r gf; do
+        head --lines=1 "$gf" 2>/dev/null | grep --quiet '^#!.*bash' && echo "$gf"
+    done)
     if [[ "$bash_found" -eq 1 ]]; then
         needed[lint-bash]=1
     fi
@@ -326,6 +328,12 @@ if [[ "$MODE" != "lint" && "$MODE" != "fix" ]]; then
     echo "  install — install a pre-commit hook in the current repo"
     exit 1
 fi
+
+git rev-parse --git-dir > /dev/null 2>&1 || {
+    echo "ERROR: Not a git repository." >&2
+    echo "Run this script from inside a git-managed project." >&2
+    exit 1
+}
 
 RUNTIME="$(detect_runtime)"
 

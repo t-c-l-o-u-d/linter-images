@@ -12,7 +12,7 @@ declare -A FIX_SUPPORTED=(
     [lint-python]=1
 )
 
-HOOK_URL="https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/lint"
+HOOK_URL="https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/linter-aio.bash"
 
 HOOK_CONTENT="#!/usr/bin/env bash
 set -euo pipefail
@@ -53,7 +53,7 @@ if [[ "${MODE}" == "install" ]]; then
 fi
 
 if [[ "${MODE}" != "lint" && "${MODE}" != "fix" ]]; then
-    echo "Usage: lint [lint|fix|install]"
+    echo "Usage: linter-aio.bash [lint|fix|install]"
     echo "  lint    — run all detected linters (default)"
     echo "  fix     — auto-fix with supported linters"
     echo "  install — install a pre-commit hook in the current repo"

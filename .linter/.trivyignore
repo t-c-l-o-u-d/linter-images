@@ -23,5 +23,8 @@ CVE-2026-26007
 # lint-css: js-yaml — upstream Arch package
 CVE-2025-64718
 
+# lint-markdown: markdown-it ReDoS — upstream Arch package, fixed in 14.1.1
+CVE-2026-2327
+
 # lint-vim: jaraco.context — upstream Arch package
 CVE-2026-23949

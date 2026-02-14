@@ -12,12 +12,51 @@ declare -A FIX_SUPPORTED=(
     [lint-python]=1
 )
 
+HOOK_URL="https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/lint"
+
+HOOK_CONTENT="#!/usr/bin/env bash
+set -euo pipefail
+# installed by: curl -sL ${HOOK_URL} | bash -s install
+curl --silent --fail --location ${HOOK_URL} | bash -s fix
+curl --silent --fail --location ${HOOK_URL} | bash -s lint
+"
+
+install_hook() {
+    local git_dir
+    git_dir="$(git rev-parse --git-dir 2>/dev/null)" || {
+        echo "ERROR: Not a git repository."
+        exit 1
+    }
+
+    local hooks_dir="${git_dir}/hooks"
+    local hook_path="${hooks_dir}/pre-commit"
+
+    mkdir --parents "${hooks_dir}"
+
+    if [[ -f "${hook_path}" ]]; then
+        local backup
+        backup="${hook_path}.backup.$(date +%Y%m%d%H%M%S)"
+        cp "${hook_path}" "${backup}"
+        echo "Existing pre-commit hook backed up to: ${backup}"
+    fi
+
+    printf '%s' "${HOOK_CONTENT}" > "${hook_path}"
+    chmod +x "${hook_path}"
+    echo "Pre-commit hook installed at: ${hook_path}"
+    exit 0
+}
+
 MODE="${1:-lint}"
 
+if [[ "${MODE}" == "install" ]]; then
+    install_hook
+fi
+
 if [[ "${MODE}" != "lint" && "${MODE}" != "fix" ]]; then
-    echo "Usage: lint [lint|fix]"
-    echo "  lint  — run all detected linters (default)"
-    echo "  fix   — auto-fix with supported linters"
+    echo "Usage: lint [lint|fix|install]"
+    echo "  lint    — run all detected linters (default)"
+    echo "  fix     — auto-fix with supported linters"
+    echo "  install — install a pre-commit hook in the current repo"
     exit 1
 fi
 

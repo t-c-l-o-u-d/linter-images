@@ -155,9 +155,11 @@ SUPPORTED_EXT_RE="^(py|css|scss|html|js|mjs|cjs|json|yml|yaml|vim|service|timer|
 # mimetypes we have linters for (bash is detected via shebang + mimetype)
 SUPPORTED_MIME_RE="^text/x-shellscript$"
 # non-code files to silently skip
-SKIP_EXT_RE="^(txt|lock|toml|cfg|ini|conf|gitignore|gitattributes|editorconfig|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$"
+SKIP_EXT_RE="^(txt|lock|toml|cfg|ini|conf|gitignore|gitattributes|editorconfig|trivyignore|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$"
 # known filenames we handle
 SUPPORTED_NAMES_RE="^(Containerfile|vimrc|ansible\.cfg|site\.yml|site\.yaml)$"
+# non-code filenames to silently skip
+SKIP_NAMES_RE="^(COPYING|LICENSE|LICENCE|AUTHORS|CHANGELOG|Makefile)$"
 
 detect_unsupported() {
     local -A unsupported=()
@@ -168,6 +170,11 @@ detect_unsupported() {
 
         # skip known supported filenames
         if [[ "$base" =~ ${SUPPORTED_NAMES_RE} ]]; then
+            continue
+        fi
+
+        # skip known non-code filenames
+        if [[ "$base" =~ ${SKIP_NAMES_RE} ]]; then
             continue
         fi
 

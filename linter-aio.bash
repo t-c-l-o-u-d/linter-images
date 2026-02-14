@@ -253,13 +253,13 @@ else
 fi
 "
 
-    # fix-capable images: fix then lint
+    # fix section: auto-fix images
     local has_fix=0
     for img in "${images[@]}"; do
         if [[ -n "${FIX_SUPPORTED[${img}]+x}" ]]; then
             if [[ ${has_fix} -eq 0 ]]; then
                 hook_body+="
-# --- Fix + Lint ---"
+# --- Fix ---"
                 has_fix=1
             fi
             hook_body+="
@@ -268,34 +268,22 @@ fi
     --pull always \\
     --volume \"\$(pwd)\":/workspace \\
     \"\${REGISTRY}/${img}:latest\" \\
-    /usr/local/bin/fix
-\"\$RUNTIME\" run \\
-    --rm \\
-    --pull always \\
-    --volume \"\$(pwd)\":/workspace \\
-    \"\${REGISTRY}/${img}:latest\" \\
-    /usr/local/bin/lint"
+    /usr/local/bin/fix"
         fi
     done
 
-    # lint-only images
-    local has_lint=0
-    for img in "${images[@]}"; do
-        if [[ -z "${FIX_SUPPORTED[${img}]+x}" ]]; then
-            if [[ ${has_lint} -eq 0 ]]; then
-                hook_body+="
+    # lint section: all images
+    hook_body+="
 
-# --- Lint-only ---"
-                has_lint=1
-            fi
-            hook_body+="
+# --- Lint ---"
+    for img in "${images[@]}"; do
+        hook_body+="
 \"\$RUNTIME\" run \\
     --rm \\
     --pull always \\
     --volume \"\$(pwd)\":/workspace \\
     \"\${REGISTRY}/${img}:latest\" \\
     /usr/local/bin/lint"
-        fi
     done
     hook_body+="
 "

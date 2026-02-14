@@ -4,35 +4,30 @@ OCI linter images built on Arch Linux. Pull them, mount your repo, done.
 
 Registry: `ghcr.io/t-c-l-o-u-d/linter-images`
 
-## Quickstart: lint-all
+## Quickstart
 
-The fastest way to get started. One image scans your repo and runs the right linters automatically.
+The fastest way to get started. One script detects your file types and runs the right linters automatically.
 
 ### Lint everything
 
 ```bash
-podman run --rm \
-    --volume "$(pwd)":/workspace \
-    --env WORKSPACE_HOST_PATH="$(pwd)" \
-    --volume /run/podman/podman.sock:/run/podman/podman.sock \
-    ghcr.io/t-c-l-o-u-d/linter-images/lint-all:latest \
-    /usr/local/bin/lint
+curl -sL https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/linter-aio.bash | bash
 ```
 
 ### Fix and lint everything
 
 ```bash
-podman run --rm \
-    --volume "$(pwd)":/workspace \
-    --env WORKSPACE_HOST_PATH="$(pwd)" \
-    --volume /run/podman/podman.sock:/run/podman/podman.sock \
-    ghcr.io/t-c-l-o-u-d/linter-images/lint-all:latest \
-    /usr/local/bin/fix
+curl -sL https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/linter-aio.bash | bash -s fix
+curl -sL https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/linter-aio.bash | bash -s lint
 ```
 
-It detects file types, pulls only the needed linter images, and reports a single pass/fail.
+### Install as a pre-commit hook
 
-> **Note:** The `lint-all` image needs access to a container runtime to invoke specialized linter images. Mount your podman socket and set `WORKSPACE_HOST_PATH` so child containers can access your repo.
+```bash
+curl -sL https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/linter-aio.bash | bash -s install
+```
+
+This backs up any existing pre-commit hook and installs one that runs fix + lint before every commit.
 
 ---
 
@@ -40,7 +35,6 @@ It detects file types, pulls only the needed linter images, and reports a single
 
 | Image | Tools | Auto-fix? |
 |-------|-------|-----------|
-| **`lint-all`** | **orchestrator (invokes all others)** | **Yes** |
 | `lint-ansible` | ansible-lint | No |
 | `lint-bash` | shellcheck, shellharden | Yes |
 | `lint-containerfile` | hadolint | No |
@@ -68,13 +62,17 @@ That's it. It exits `0` on pass, `1` on fail.
 
 ---
 
-## Pre-commit Hook (Fix + Lint)
+## Pre-commit Hook
 
-This runs **fix first** (auto-format), then **lint** to catch anything fix couldn't handle. Runs locally before every commit.
+The easiest way to install a pre-commit hook:
 
-### Step 1: Create the hook file
+```bash
+curl -sL https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/linter-aio.bash | bash -s install
+```
 
-Create `.git/hooks/pre-commit` in your project:
+This auto-detects your file types, runs fix then lint before every commit, and backs up any existing hook.
+
+For manual setup or per-image control, create `.git/hooks/pre-commit`:
 
 ```bash
 #!/usr/bin/env bash
@@ -83,46 +81,23 @@ set -euo pipefail
 REGISTRY="ghcr.io/t-c-l-o-u-d/linter-images"
 
 # Add one block per language your project uses.
-# Remove what you don't need.
 
-# --- Python ---
+# --- Python (fix + lint) ---
 podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-python:latest" /usr/local/bin/fix
 podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-python:latest" /usr/local/bin/lint
 
-# --- Bash ---
+# --- Bash (fix + lint) ---
 podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-bash:latest" /usr/local/bin/fix
 podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-bash:latest" /usr/local/bin/lint
 
-# --- JavaScript ---
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-javascript:latest" /usr/local/bin/fix
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-javascript:latest" /usr/local/bin/lint
-
-# --- CSS ---
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-css:latest" /usr/local/bin/fix
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-css:latest" /usr/local/bin/lint
-
-# --- Lint-only (no auto-fix available) ---
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-ansible:latest" /usr/local/bin/lint
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-containerfile:latest" /usr/local/bin/lint
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-html:latest" /usr/local/bin/lint
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-json:latest" /usr/local/bin/lint
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-markdown:latest" /usr/local/bin/lint
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-systemd:latest" /usr/local/bin/lint
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-vim:latest" /usr/local/bin/lint
+# --- Lint-only ---
 podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-yaml:latest" /usr/local/bin/lint
+podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-json:latest" /usr/local/bin/lint
 ```
 
-### Step 2: Make it executable
+Then `chmod +x .git/hooks/pre-commit`. If any linter fails, the commit is blocked.
 
-```bash
-chmod +x .git/hooks/pre-commit
-```
-
-### Step 3: That's it
-
-Next time you `git commit`, the hook runs automatically. If any linter fails, the commit is blocked until you fix the issues.
-
-> **Tip:** Delete any lines for languages your project doesn't use. Fewer images = faster commits.
+> **Tip:** Remove lines for languages your project doesn't use.
 
 ---
 

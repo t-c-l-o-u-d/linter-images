@@ -12,7 +12,7 @@ if [[ -z "$CACHE_IDS" ]]; then
   exit 0
 fi
 
-for CACHE_ID in "$CACHE_IDS"; do
+while IFS= read -r CACHE_ID; do
   echo "Deleting cache ${CACHE_ID}"
   gh cache delete "$CACHE_ID" || true
-done
+done <<< "$CACHE_IDS"

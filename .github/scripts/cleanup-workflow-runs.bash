@@ -10,7 +10,7 @@ KEEP_COUNT="${KEEP_COUNT:-3}"
 # List all workflow files in the repository
 WORKFLOWS=$(gh workflow list --json id,name --jq '.[].id')
 
-for WORKFLOW_ID in "$WORKFLOWS"; do
+while IFS= read -r WORKFLOW_ID; do
   WORKFLOW_NAME=$(gh workflow view "$WORKFLOW_ID" --json name --jq '.name')
   echo "::group::${WORKFLOW_NAME} (ID ${WORKFLOW_ID})"
 
@@ -18,7 +18,7 @@ for WORKFLOW_ID in "$WORKFLOWS"; do
   RUN_IDS=$(gh run list --workflow "$WORKFLOW_ID" --limit 500 --json databaseId --jq '.[].databaseId')
 
   COUNT=0
-  for RUN_ID in "$RUN_IDS"; do
+  while IFS= read -r RUN_ID; do
     COUNT=$((COUNT + 1))
     if [[ ${COUNT} -le ${KEEP_COUNT} ]]; then
       echo "Keeping run ${RUN_ID} (${COUNT}/${KEEP_COUNT})"
@@ -26,7 +26,7 @@ for WORKFLOW_ID in "$WORKFLOWS"; do
     fi
     echo "Deleting run ${RUN_ID}"
     gh run delete "$RUN_ID" || true
-  done
+  done <<< "$RUN_IDS"
 
   echo "::endgroup::"
-done
+done <<< "$WORKFLOWS"

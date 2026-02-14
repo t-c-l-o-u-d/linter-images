@@ -298,10 +298,10 @@ fi
 
     mkdir --parents "$hooks_dir"
 
-    if [[ -f "$hook_path" ]]; then
+    if [[ -L "$hook_path" || -f "$hook_path" ]]; then
         local backup
         backup="${hook_path}.backup.$(date +%Y%m%d%H%M%S)"
-        cp "$hook_path" "$backup"
+        mv "$hook_path" "$backup"
         echo ""
         echo "Existing pre-commit hook backed up to: ${backup}"
     fi

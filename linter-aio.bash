@@ -204,7 +204,7 @@ run_container() {
     "$RUNTIME" run \
         --rm \
         --pull always \
-        --volume "$PWD":/workspace \
+        --volume "$PWD":/workspace:z \
         "$full_image" \
         "$command"
 }
@@ -266,7 +266,7 @@ fi
 \"\$RUNTIME\" run \\
     --rm \\
     --pull always \\
-    --volume \"\$(pwd)\":/workspace \\
+    --volume \"\$(pwd)\":/workspace:z \\
     \"\${REGISTRY}/${img}:latest\" \\
     /usr/local/bin/fix"
         fi
@@ -281,7 +281,7 @@ fi
 \"\$RUNTIME\" run \\
     --rm \\
     --pull always \\
-    --volume \"\$(pwd)\":/workspace \\
+    --volume \"\$(pwd)\":/workspace:z \\
     \"\${REGISTRY}/${img}:latest\" \\
     /usr/local/bin/lint"
     done

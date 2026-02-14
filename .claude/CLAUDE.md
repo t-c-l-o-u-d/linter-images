@@ -38,7 +38,7 @@ ghcr.io via GitHub Actions.
   podman run \
       --rm \
       --pull always \
-      --volume "$(pwd)":/workspace \
+      --volume "$(pwd)":/workspace:z \
       IMAGE \
       /usr/local/bin/lint
   ```

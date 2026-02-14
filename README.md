@@ -1,6 +1,7 @@
 # linter-images
 
-OCI linter images built on Arch Linux. Pull them, mount your repo, done.
+OCI linter images built on Arch Linux. Pull them, mount
+your repo, done. Works with podman or docker.
 
 Registry: `ghcr.io/t-c-l-o-u-d/linter-images`
 
@@ -12,26 +13,28 @@ file types and runs the right linters automatically.
 ### Lint everything
 
 ```bash
-URL="https://raw.githubusercontent.com"
-URL+="/t-c-l-o-u-d/linter-images/main/linter-aio.bash"
-curl -sL "${URL}" | bash
+curl -sL https://raw.githubusercontent.com/\
+t-c-l-o-u-d/linter-images/main/linter-aio.bash \
+  | bash
 ```
 
 ### Fix and lint everything
 
 ```bash
-URL="https://raw.githubusercontent.com"
-URL+="/t-c-l-o-u-d/linter-images/main/linter-aio.bash"
-curl -sL "${URL}" | bash -s fix
-curl -sL "${URL}" | bash -s lint
+curl -sL https://raw.githubusercontent.com/\
+t-c-l-o-u-d/linter-images/main/linter-aio.bash \
+  | bash -s fix
+curl -sL https://raw.githubusercontent.com/\
+t-c-l-o-u-d/linter-images/main/linter-aio.bash \
+  | bash -s lint
 ```
 
 ### Install as a pre-commit hook
 
 ```bash
-URL="https://raw.githubusercontent.com"
-URL+="/t-c-l-o-u-d/linter-images/main/linter-aio.bash"
-curl -sL "${URL}" | bash -s install
+curl -sL https://raw.githubusercontent.com/\
+t-c-l-o-u-d/linter-images/main/linter-aio.bash \
+  | bash -s install
 ```
 
 This backs up any existing pre-commit hook and installs
@@ -41,20 +44,20 @@ one that runs fix + lint before every commit.
 
 ## Available Images
 
-| Image | Tools | Auto-fix? |
-| ----- | ----- | --------- |
-| `lint-ansible` | ansible-lint | No |
-| `lint-bash` | shellcheck, shellharden | Yes |
-| `lint-containerfile` | hadolint | No |
-| `lint-css` | stylelint, biome | Yes |
-| `lint-html` | tidy | No |
-| `lint-javascript` | eslint, biome | Yes |
-| `lint-json` | python json.tool | No |
-| `lint-markdown` | markdownlint-cli2 | No |
-| `lint-python` | ruff, mypy | Yes |
-| `lint-systemd` | systemd-analyze | No |
-| `lint-vim` | vint | No |
-| `lint-yaml` | yamllint | No |
+| Image                | Tools                     | Auto-fix? |
+| -------------------- | ------------------------- | --------- |
+| `lint-ansible`       | ansible-lint              | No        |
+| `lint-bash`          | shellcheck, shellharden   | Yes       |
+| `lint-containerfile` | hadolint                  | No        |
+| `lint-css`           | stylelint, biome          | Yes       |
+| `lint-html`          | tidy                      | No        |
+| `lint-javascript`    | eslint, biome             | Yes       |
+| `lint-json`          | python json.tool          | No        |
+| `lint-markdown`      | markdownlint-cli2         | No        |
+| `lint-python`        | ruff, mypy                | Yes       |
+| `lint-systemd`       | systemd-analyze           | No        |
+| `lint-vim`           | vint                      | No        |
+| `lint-yaml`          | yamllint                  | No        |
 
 Every image has a `/usr/local/bin/lint` script. Images
 marked **Yes** also have a `/usr/local/bin/fix` script
@@ -67,10 +70,12 @@ The scripts use `git ls-files` to find files, so the
 mount **must** be a git repo.
 
 ```bash
-podman run --rm -v "$(pwd)":/workspace IMAGE /usr/local/bin/lint
+podman run --rm -v "$(pwd)":/workspace \
+  IMAGE /usr/local/bin/lint
 ```
 
-That's it. It exits `0` on pass, `1` on fail.
+That's it. It exits `0` on pass, `1` on fail. Works the
+same way with `docker` instead of `podman`.
 
 ---
 
@@ -79,15 +84,17 @@ That's it. It exits `0` on pass, `1` on fail.
 The easiest way to install a pre-commit hook:
 
 ```bash
-URL="https://raw.githubusercontent.com"
-URL+="/t-c-l-o-u-d/linter-images/main/linter-aio.bash"
-curl -sL "${URL}" | bash -s install
+curl -sL https://raw.githubusercontent.com/\
+t-c-l-o-u-d/linter-images/main/linter-aio.bash \
+  | bash -s install
 ```
 
-This auto-detects your file types, runs fix then lint
-before every commit, and backs up any existing hook.
+This auto-detects your file types, generates targeted
+container commands for each linter, and backs up any
+existing hook. The generated hook supports both podman
+and docker.
 
-For manual setup or per-image control, create `.git/hooks/pre-commit`:
+For manual setup, create `.git/hooks/pre-commit`:
 
 ```bash
 #!/usr/bin/env bash
@@ -95,37 +102,49 @@ set -euo pipefail
 
 REGISTRY="ghcr.io/t-c-l-o-u-d/linter-images"
 
+# detect container runtime
+if command -v podman > /dev/null 2>&1; then
+    RUNTIME="podman"
+elif command -v docker > /dev/null 2>&1; then
+    RUNTIME="docker"
+else
+    echo "ERROR: No container runtime found."
+    exit 1
+fi
+
 # Add one block per language your project uses.
 
 # --- Python (fix + lint) ---
-podman run --rm -v "$(pwd)":/workspace \
+"$RUNTIME" run --rm -v "$(pwd)":/workspace \
   "${REGISTRY}/lint-python:latest" /usr/local/bin/fix
-podman run --rm -v "$(pwd)":/workspace \
+"$RUNTIME" run --rm -v "$(pwd)":/workspace \
   "${REGISTRY}/lint-python:latest" /usr/local/bin/lint
 
 # --- Bash (fix + lint) ---
-podman run --rm -v "$(pwd)":/workspace \
+"$RUNTIME" run --rm -v "$(pwd)":/workspace \
   "${REGISTRY}/lint-bash:latest" /usr/local/bin/fix
-podman run --rm -v "$(pwd)":/workspace \
+"$RUNTIME" run --rm -v "$(pwd)":/workspace \
   "${REGISTRY}/lint-bash:latest" /usr/local/bin/lint
 
 # --- Lint-only ---
-podman run --rm -v "$(pwd)":/workspace \
+"$RUNTIME" run --rm -v "$(pwd)":/workspace \
   "${REGISTRY}/lint-yaml:latest" /usr/local/bin/lint
-podman run --rm -v "$(pwd)":/workspace \
+"$RUNTIME" run --rm -v "$(pwd)":/workspace \
   "${REGISTRY}/lint-json:latest" /usr/local/bin/lint
 ```
 
 Then `chmod +x .git/hooks/pre-commit`. If any linter
 fails, the commit is blocked.
 
-> **Tip:** Remove lines for languages your project doesn't use.
+> **Tip:** Remove lines for languages your project
+> doesn't use.
 
 ---
 
 ## GitHub Actions (Lint Only)
 
-Add this to `.github/workflows/lint.yaml` in your project:
+Add this to `.github/workflows/lint.yaml` in your
+project:
 
 ### Single language
 
@@ -194,7 +213,7 @@ lint-python:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 ```
 
-### Multiple languages
+### Multiple languages (GitLab)
 
 ```yaml
 stages:
@@ -237,18 +256,18 @@ the Python linter uses it.
 
 ### Common config files by linter
 
-| Image | Config files (place in your repo root) |
-| ----- | ------------------------------------- |
-| `lint-ansible` | `.ansible-lint` |
-| `lint-bash` | `.shellcheckrc` |
-| `lint-containerfile` | `.hadolint.yaml` |
-| `lint-css` | `.stylelintrc.json`, `biome.json` |
-| `lint-html` | `.tidyrc` |
-| `lint-javascript` | `eslint.config.js`, `biome.json` |
-| `lint-markdown` | `.markdownlint-cli2.yaml`, `.markdownlint.yaml` |
-| `lint-python` | `ruff.toml`, `pyproject.toml`, `mypy.ini`, `setup.cfg` |
-| `lint-vim` | `.vintrc.yaml` |
-| `lint-yaml` | `.yamllint.yaml`, `.yamllint` |
+| Image                | Config files (repo root)             |
+| -------------------- | ------------------------------------ |
+| `lint-ansible`       | `.ansible-lint`                      |
+| `lint-bash`          | `.shellcheckrc`                      |
+| `lint-containerfile` | `.hadolint.yaml`                     |
+| `lint-css`           | `.stylelintrc.json`, `biome.json`    |
+| `lint-html`          | `.tidyrc`                            |
+| `lint-javascript`    | `eslint.config.js`, `biome.json`     |
+| `lint-markdown`      | `.markdownlint-cli2.yaml`            |
+| `lint-python`        | `ruff.toml`, `pyproject.toml`        |
+| `lint-vim`           | `.vintrc.yaml`                       |
+| `lint-yaml`          | `.yamllint.yaml`, `.yamllint`        |
 
 ### Config files stored outside the repo
 
@@ -259,13 +278,14 @@ company config), mount it explicitly:
 # Mount a ruff config from your home directory
 podman run --rm \
   -v "$(pwd)":/workspace \
-  -v "${HOME}/.config/ruff/ruff.toml":/workspace/ruff.toml:ro \
+  -v "$HOME/.config/ruff/ruff.toml":/workspace/ruff.toml:ro \
   ghcr.io/t-c-l-o-u-d/linter-images/lint-python:latest \
   /usr/local/bin/lint
 ```
 
 The `:ro` flag mounts it read-only so the container
-can't modify your config.
+can't modify your config. Replace `podman` with `docker`
+if needed.
 
 In GitHub Actions, use an extra step to copy the config
 before linting:

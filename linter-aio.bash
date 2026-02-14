@@ -325,5 +325,7 @@ if [[ ${errors} -gt 0 ]]; then
     exit 1
 fi
 
-echo ""
-echo "Done. Run lint to verify."
+if [[ "$MODE" == "fix" ]]; then
+    echo ""
+    echo "Done. Run lint to verify."
+fi

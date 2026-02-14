@@ -62,7 +62,7 @@ The scripts use `git ls-files` to find files, so the
 mount **must** be a git repo.
 
 ```bash
-podman run --rm -v "$(pwd)":/workspace \
+podman run --rm --pull always -v "$(pwd)":/workspace \
   IMAGE /usr/local/bin/lint
 ```
 
@@ -105,21 +105,21 @@ fi
 # Add one block per language your project uses.
 
 # --- Python (fix + lint) ---
-"$RUNTIME" run --rm -v "$(pwd)":/workspace \
+"$RUNTIME" run --rm --pull always -v "$(pwd)":/workspace \
   "${REGISTRY}/lint-python:latest" /usr/local/bin/fix
-"$RUNTIME" run --rm -v "$(pwd)":/workspace \
+"$RUNTIME" run --rm --pull always -v "$(pwd)":/workspace \
   "${REGISTRY}/lint-python:latest" /usr/local/bin/lint
 
 # --- Bash (fix + lint) ---
-"$RUNTIME" run --rm -v "$(pwd)":/workspace \
+"$RUNTIME" run --rm --pull always -v "$(pwd)":/workspace \
   "${REGISTRY}/lint-bash:latest" /usr/local/bin/fix
-"$RUNTIME" run --rm -v "$(pwd)":/workspace \
+"$RUNTIME" run --rm --pull always -v "$(pwd)":/workspace \
   "${REGISTRY}/lint-bash:latest" /usr/local/bin/lint
 
 # --- Lint-only ---
-"$RUNTIME" run --rm -v "$(pwd)":/workspace \
+"$RUNTIME" run --rm --pull always -v "$(pwd)":/workspace \
   "${REGISTRY}/lint-yaml:latest" /usr/local/bin/lint
-"$RUNTIME" run --rm -v "$(pwd)":/workspace \
+"$RUNTIME" run --rm --pull always -v "$(pwd)":/workspace \
   "${REGISTRY}/lint-json:latest" /usr/local/bin/lint
 ```
 
@@ -269,7 +269,7 @@ company config), mount it explicitly:
 
 ```bash
 # Mount a ruff config from your home directory
-podman run --rm \
+podman run --rm --pull always \
   -v "$(pwd)":/workspace \
   -v "$HOME/.config/ruff/ruff.toml":/workspace/ruff.toml:ro \
   ghcr.io/t-c-l-o-u-d/linter-images/lint-python:latest \

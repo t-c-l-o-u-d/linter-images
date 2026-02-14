@@ -203,6 +203,7 @@ run_container() {
 
     "$RUNTIME" run \
         --rm \
+        --pull always \
         --volume "$PWD":/workspace \
         "$full_image" \
         "$command"
@@ -262,9 +263,9 @@ fi
                 has_fix=1
             fi
             hook_body+="
-\"\$RUNTIME\" run --rm --volume \"\$(pwd)\":/workspace \\
+\"\$RUNTIME\" run --rm --pull always --volume \"\$(pwd)\":/workspace \\
     \"\${REGISTRY}/${img}:latest\" /usr/local/bin/fix
-\"\$RUNTIME\" run --rm --volume \"\$(pwd)\":/workspace \\
+\"\$RUNTIME\" run --rm --pull always --volume \"\$(pwd)\":/workspace \\
     \"\${REGISTRY}/${img}:latest\" /usr/local/bin/lint"
         fi
     done
@@ -280,7 +281,7 @@ fi
                 has_lint=1
             fi
             hook_body+="
-\"\$RUNTIME\" run --rm --volume \"\$(pwd)\":/workspace \\
+\"\$RUNTIME\" run --rm --pull always --volume \"\$(pwd)\":/workspace \\
     \"\${REGISTRY}/${img}:latest\" /usr/local/bin/lint"
         fi
     done

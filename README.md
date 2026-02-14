@@ -42,7 +42,7 @@ one that runs fix + lint before every commit.
 ## Available Images
 
 | Image | Tools | Auto-fix? |
-|-------|-------|-----------|
+| ----- | ----- | --------- |
 | `lint-ansible` | ansible-lint | No |
 | `lint-bash` | shellcheck, shellharden | Yes |
 | `lint-containerfile` | hadolint | No |
@@ -238,7 +238,7 @@ the Python linter uses it.
 ### Common config files by linter
 
 | Image | Config files (place in your repo root) |
-|-------|---------------------------------------|
+| ----- | ------------------------------------- |
 | `lint-ansible` | `.ansible-lint` |
 | `lint-bash` | `.shellcheckrc` |
 | `lint-containerfile` | `.hadolint.yaml` |

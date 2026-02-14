@@ -28,7 +28,8 @@ fi
 echo "Running json syntax check..."
 errors=0
 for f in "${json_files[@]}"; do
-    if ! python3 -m json.tool "$f" > /dev/null; then
+    if ! output=$(python3 -m json.tool "$f" 2>&1 > /dev/null); then
+        echo "  ${f}: ${output}"
         errors=$((errors + 1))
     fi
 done

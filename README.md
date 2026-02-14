@@ -65,7 +65,7 @@ mount **must** be a git repo.
 podman run \
   --rm \
   --pull always \
-  --volume "$(pwd)":/workspace:z \
+  --volume "$(pwd)":/workspace:ro,z \
   IMAGE \
   /usr/local/bin/lint
 ```
@@ -118,7 +118,7 @@ fi
 "$RUNTIME" run \
   --rm \
   --pull always \
-  --volume "$(pwd)":/workspace:z \
+  --volume "$(pwd)":/workspace:ro,z \
   "${REGISTRY}/lint-python:latest" \
   /usr/local/bin/lint
 
@@ -132,7 +132,7 @@ fi
 "$RUNTIME" run \
   --rm \
   --pull always \
-  --volume "$(pwd)":/workspace:z \
+  --volume "$(pwd)":/workspace:ro,z \
   "${REGISTRY}/lint-bash:latest" \
   /usr/local/bin/lint
 
@@ -140,13 +140,13 @@ fi
 "$RUNTIME" run \
   --rm \
   --pull always \
-  --volume "$(pwd)":/workspace:z \
+  --volume "$(pwd)":/workspace:ro,z \
   "${REGISTRY}/lint-yaml:latest" \
   /usr/local/bin/lint
 "$RUNTIME" run \
   --rm \
   --pull always \
-  --volume "$(pwd)":/workspace:z \
+  --volume "$(pwd)":/workspace:ro,z \
   "${REGISTRY}/lint-json:latest" \
   /usr/local/bin/lint
 ```
@@ -300,7 +300,7 @@ company config), mount it explicitly:
 podman run \
   --rm \
   --pull always \
-  --volume "$(pwd)":/workspace:z \
+  --volume "$(pwd)":/workspace:ro,z \
   --volume "$HOME/.config/ruff/ruff.toml":/workspace/ruff.toml:ro,z \
   ghcr.io/t-c-l-o-u-d/linter-images/lint-python:latest \
   /usr/local/bin/lint

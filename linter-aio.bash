@@ -196,6 +196,12 @@ run_container() {
     local command="$2"
     local full_image="${REGISTRY}/${image_name}:latest"
 
+    # fix needs read-write; lint is read-only
+    local vol_opts="ro,z"
+    if [[ "$command" == "/usr/local/bin/fix" ]]; then
+        vol_opts="z"
+    fi
+
     echo ""
     echo "-------------------------------------------"
     echo "  ${image_name} :: ${command##*/}"
@@ -204,7 +210,7 @@ run_container() {
     "$RUNTIME" run \
         --rm \
         --pull always \
-        --volume "$PWD":/workspace:z \
+        --volume "$PWD":/workspace:"$vol_opts" \
         "$full_image" \
         "$command"
 }
@@ -272,7 +278,7 @@ fi
         fi
     done
 
-    # lint section: all images
+    # lint section: all images (read-only mount)
     hook_body+="
 
 # --- Lint ---"
@@ -281,7 +287,7 @@ fi
 \"\$RUNTIME\" run \\
     --rm \\
     --pull always \\
-    --volume \"\$(pwd)\":/workspace:z \\
+    --volume \"\$(pwd)\":/workspace:ro,z \\
     \"\${REGISTRY}/${img}:latest\" \\
     /usr/local/bin/lint"
     done

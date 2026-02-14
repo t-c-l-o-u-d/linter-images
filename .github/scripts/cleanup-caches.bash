@@ -7,12 +7,12 @@ set -euo pipefail
 
 CACHE_IDS=$(gh cache list --limit 100 --json id --jq '.[].id')
 
-if [[ -z "${CACHE_IDS}" ]]; then
+if [[ -z "$CACHE_IDS" ]]; then
   echo "No caches to delete."
   exit 0
 fi
 
-for CACHE_ID in ${CACHE_IDS}; do
+for CACHE_ID in "$CACHE_IDS"; do
   echo "Deleting cache ${CACHE_ID}"
-  gh cache delete "${CACHE_ID}" || true
+  gh cache delete "$CACHE_ID" || true
 done

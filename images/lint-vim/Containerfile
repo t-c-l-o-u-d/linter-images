@@ -29,6 +29,10 @@ RUN pacman --sync --clean --clean --noconfirm
 COPY lint.bash /usr/local/bin/lint
 RUN chmod +x /usr/local/bin/lint
 
+# suppress pkg_resources deprecation warning from vint on Python 3.14+
+# REVIEW-BY: 2026-05-14 — remove if vint upstream drops pkg_resources
+ENV PYTHONWARNINGS="ignore::UserWarning:vint.linting.cli"
+
 WORKDIR /workspace
 
 LABEL org.opencontainers.image.authors "https://github.com/t-c-l-o-u-d"

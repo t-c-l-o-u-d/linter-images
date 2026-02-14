@@ -10,16 +10,17 @@ declare -A FIX_SUPPORTED=(
     [lint-css]=1
     [lint-javascript]=1
     [lint-python]=1
+    [lint-rust]=1
 )
 
 # extensions we have linters for
-SUPPORTED_EXT_RE="^(py|css|scss|html|js|mjs|cjs|json|yml|yaml|vim|service|timer|socket|path|mount|target|slice|md)$"
+SUPPORTED_EXT_RE="^(py|rs|css|scss|html|js|mjs|cjs|json|yml|yaml|vim|service|timer|socket|path|mount|target|slice|md)$"
 # mimetypes we have linters for (bash is detected via shebang + mimetype)
 SUPPORTED_MIME_RE="^text/x-shellscript$"
 # non-code files to silently skip
 SKIP_EXT_RE="^(txt|lock|toml|cfg|ini|conf|gitignore|gitattributes|editorconfig|trivyignore|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$"
 # known filenames we handle
-SUPPORTED_NAMES_RE="^(Containerfile|vimrc|ansible\.cfg|site\.yml|site\.yaml)$"
+SUPPORTED_NAMES_RE="^(Cargo\.toml|Containerfile|vimrc|ansible\.cfg|site\.yml|site\.yaml)$"
 # non-code filenames to silently skip
 SKIP_NAMES_RE="^(COPYING|LICENSE|LICENCE|AUTHORS|CHANGELOG|Makefile)$"
 
@@ -41,6 +42,11 @@ detect_images() {
     # python
     if git ls-files '*.py' | grep --quiet .; then
         needed[lint-python]=1
+    fi
+
+    # rust
+    if git ls-files '*.rs' 'Cargo.toml' | grep --quiet .; then
+        needed[lint-rust]=1
     fi
 
     # bash

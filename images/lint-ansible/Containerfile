@@ -20,6 +20,7 @@ RUN pacman --sync --refresh --sysupgrade --noconfirm
 
 # install linter packages
 RUN pacman --sync --refresh --noconfirm \
+    ansible \
     ansible-lint \
     git
 

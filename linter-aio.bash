@@ -145,9 +145,9 @@ detect_images() {
         needed[lint-ansible]=1
     fi
 
-    for image in "$(printf '%s\n' "${!needed[@]}" | sort)"; do
+    while IFS= read -r image; do
         echo "$image"
-    done
+    done < <(printf '%s\n' "${!needed[@]}" | sort)
 }
 
 # extensions we have linters for
@@ -229,9 +229,9 @@ detect_unsupported() {
     if [[ ${#unsupported[@]} -gt 0 ]]; then
         echo ""
         echo "Note: no linter available for these file types:"
-        for desc in "$(printf '%s\n' "${!unsupported[@]}" | sort)"; do
+        while IFS= read -r desc; do
             echo "  - ${desc}"
-        done
+        done < <(printf '%s\n' "${!unsupported[@]}" | sort)
     fi
 }
 

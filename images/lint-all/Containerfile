@@ -1,0 +1,23 @@
+# GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
+
+FROM ghcr.io/t-c-l-o-u-d/linter-images/base-linter:latest
+
+# install orchestrator packages
+RUN pacman --sync --refresh --noconfirm \
+    git \
+    podman
+
+# clean up pacman cache
+RUN pacman --sync --clean --clean --noconfirm
+
+COPY scan.bash /usr/local/bin/scan
+COPY lint.bash /usr/local/bin/lint
+COPY fix.bash /usr/local/bin/fix
+RUN chmod +x /usr/local/bin/scan /usr/local/bin/lint /usr/local/bin/fix
+
+WORKDIR /workspace
+
+LABEL org.opencontainers.image.authors "https://github.com/t-c-l-o-u-d"
+LABEL org.opencontainers.image.description "Orchestrator image: detects file types and invokes specialized linter images"
+LABEL org.opencontainers.image.licenses "AGPL-3.0-or-later"
+LABEL org.opencontainers.image.source "https://github.com/t-c-l-o-u-d/linter-images"

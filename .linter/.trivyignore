@@ -1,0 +1,27 @@
+# REVIEW-BY: 2026-03-15 — remove these and re-test; drop any that are fixed
+
+# captree (Go 1.25.3 stdlib) — upstream Arch package, awaiting rebuild
+CVE-2025-61726
+CVE-2025-61727
+CVE-2025-61728
+CVE-2025-61729
+CVE-2025-61730
+CVE-2025-68121
+
+# lint-all: podman/skopeo Go dependencies — upstream Arch packages
+CVE-2025-47914
+CVE-2025-58181
+CVE-2025-66506
+CVE-2025-67499
+CVE-2026-0994
+CVE-2026-22772
+CVE-2026-24137
+
+# lint-ansible: cryptography — upstream Arch package
+CVE-2026-26007
+
+# lint-css: js-yaml — upstream Arch package
+CVE-2025-64718
+
+# lint-vim: jaraco.context — upstream Arch package
+CVE-2026-23949

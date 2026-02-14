@@ -1,0 +1,6 @@
+---
+ignored:
+  # Using :latest is intentional — CI builds base-linter first, then all linters
+  - DL3007
+  # Separate RUN per step is a project convention; --squash=true eliminates layer overhead
+  - DL3059

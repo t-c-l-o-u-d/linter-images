@@ -1,0 +1,29 @@
+# GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
+
+FROM ghcr.io/t-c-l-o-u-d/linter-images/base-linter:latest
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# install git for file discovery
+RUN pacman --sync --refresh --noconfirm \
+    git
+
+# clean up pacman cache
+RUN pacman --sync --clean --clean --noconfirm
+
+# install hadolint (static binary, not available in pacman)
+RUN curl --silent --fail --location \
+    --output /usr/local/bin/hadolint \
+    "https://github.com/hadolint/hadolint/releases/download/v2.14.0/hadolint-linux-x86_64" && \
+    echo "6bf226944684f56c84dd014e8b979d27425c0148f61b3bd99bcc6f39e9dc5a47  /usr/local/bin/hadolint" | sha256sum --check && \
+    chmod +x /usr/local/bin/hadolint
+
+COPY lint.bash /usr/local/bin/lint
+RUN chmod +x /usr/local/bin/lint
+
+WORKDIR /workspace
+
+LABEL org.opencontainers.image.authors "https://github.com/t-c-l-o-u-d"
+LABEL org.opencontainers.image.description "Linter image for containerfiles: hadolint"
+LABEL org.opencontainers.image.licenses "AGPL-3.0-or-later"
+LABEL org.opencontainers.image.source "https://github.com/t-c-l-o-u-d/linter-images"

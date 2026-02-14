@@ -1,0 +1,25 @@
+---
+# GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
+# Check for new hadolint releases and open an issue if outdated.
+
+name: Check Hadolint Update
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check for hadolint update
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: .github/scripts/check-hadolint-update.bash

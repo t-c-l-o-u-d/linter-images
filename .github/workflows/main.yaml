@@ -1,0 +1,52 @@
+---
+# GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
+# Main workflow for building and pruning linter images.
+
+name: Main
+
+on:
+  schedule:
+    - cron: '38 22 */3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-base:
+    name: Build Base Image
+    uses: ./.github/workflows/img-build-and-prune-ci.yaml
+    with:
+      IMAGE_NAME: "base-linter"
+      IMAGE_DIR: "images/base-linter"
+    secrets: inherit
+
+  discover:
+    name: Discover Linter Images
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: set-matrix
+        shell: bash
+        run: |
+          echo "matrix=$(
+            ls -d images/lint-* \
+            | jq --raw-input --slurp --compact-output \
+              '[split("\n")[] | select(. != "") | {IMAGE_NAME: split("/")[-1], IMAGE_DIR: .}]'
+          )" >> "$GITHUB_OUTPUT"
+
+  build-linters:
+    name: Build and Prune Images
+    needs: [build-base, discover]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.discover.outputs.matrix) }}
+    uses: ./.github/workflows/img-build-and-prune-ci.yaml
+    with:
+      IMAGE_NAME: ${{ matrix.IMAGE_NAME }}
+      IMAGE_DIR: ${{ matrix.IMAGE_DIR }}
+    secrets: inherit

@@ -1,0 +1,27 @@
+# GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
+
+FROM ghcr.io/archlinux/archlinux:base
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# update the default mirrorlist
+RUN curl --silent --fail "https://archlinux.org/mirrorlist/?country=US&protocol=https&ip_version=4&use_mirror_status=on" |\
+    sed --expression 's/^#Server/Server/' --expression '/^#/d' > /etc/pacman.d/mirrorlist
+
+# increase parallel downloads
+RUN sed --in-place --expression 's/^#\?ParallelDownloads.*$/ParallelDownloads\ =\ 5/' /etc/pacman.conf
+
+# generate the initial pacman keyring
+RUN pacman-key --init && \
+    pacman-key --populate archlinux
+
+# update all packages
+RUN pacman --sync --refresh --sysupgrade --noconfirm
+
+# clean up pacman cache
+RUN pacman --sync --clean --clean --noconfirm
+
+LABEL org.opencontainers.image.authors "https://github.com/t-c-l-o-u-d"
+LABEL org.opencontainers.image.description "Base linter image: Arch Linux with pacman setup"
+LABEL org.opencontainers.image.licenses "AGPL-3.0-or-later"
+LABEL org.opencontainers.image.source "https://github.com/t-c-l-o-u-d/linter-images"

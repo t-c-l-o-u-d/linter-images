@@ -6,28 +6,36 @@ Registry: `ghcr.io/t-c-l-o-u-d/linter-images`
 
 ## Quickstart
 
-The fastest way to get started. One script detects your file types and runs the right linters automatically.
+The fastest way to get started. One script detects your
+file types and runs the right linters automatically.
 
 ### Lint everything
 
 ```bash
-curl -sL https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/linter-aio.bash | bash
+URL="https://raw.githubusercontent.com"
+URL+="/t-c-l-o-u-d/linter-images/main/linter-aio.bash"
+curl -sL "${URL}" | bash
 ```
 
 ### Fix and lint everything
 
 ```bash
-curl -sL https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/linter-aio.bash | bash -s fix
-curl -sL https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/linter-aio.bash | bash -s lint
+URL="https://raw.githubusercontent.com"
+URL+="/t-c-l-o-u-d/linter-images/main/linter-aio.bash"
+curl -sL "${URL}" | bash -s fix
+curl -sL "${URL}" | bash -s lint
 ```
 
 ### Install as a pre-commit hook
 
 ```bash
-curl -sL https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/linter-aio.bash | bash -s install
+URL="https://raw.githubusercontent.com"
+URL+="/t-c-l-o-u-d/linter-images/main/linter-aio.bash"
+curl -sL "${URL}" | bash -s install
 ```
 
-This backs up any existing pre-commit hook and installs one that runs fix + lint before every commit.
+This backs up any existing pre-commit hook and installs
+one that runs fix + lint before every commit.
 
 ---
 
@@ -48,13 +56,17 @@ This backs up any existing pre-commit hook and installs one that runs fix + lint
 | `lint-vim` | vint | No |
 | `lint-yaml` | yamllint | No |
 
-Every image has a `/usr/local/bin/lint` script. Images marked **Yes** also have a `/usr/local/bin/fix` script that auto-formats your code.
+Every image has a `/usr/local/bin/lint` script. Images
+marked **Yes** also have a `/usr/local/bin/fix` script
+that auto-formats your code.
 
 ## How It Works
 
-Each container expects your repo mounted at `/workspace`. The scripts use `git ls-files` to find files, so the mount **must** be a git repo.
+Each container expects your repo mounted at `/workspace`.
+The scripts use `git ls-files` to find files, so the
+mount **must** be a git repo.
 
-```
+```bash
 podman run --rm -v "$(pwd)":/workspace IMAGE /usr/local/bin/lint
 ```
 
@@ -67,10 +79,13 @@ That's it. It exits `0` on pass, `1` on fail.
 The easiest way to install a pre-commit hook:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/t-c-l-o-u-d/linter-images/main/linter-aio.bash | bash -s install
+URL="https://raw.githubusercontent.com"
+URL+="/t-c-l-o-u-d/linter-images/main/linter-aio.bash"
+curl -sL "${URL}" | bash -s install
 ```
 
-This auto-detects your file types, runs fix then lint before every commit, and backs up any existing hook.
+This auto-detects your file types, runs fix then lint
+before every commit, and backs up any existing hook.
 
 For manual setup or per-image control, create `.git/hooks/pre-commit`:
 
@@ -83,19 +98,26 @@ REGISTRY="ghcr.io/t-c-l-o-u-d/linter-images"
 # Add one block per language your project uses.
 
 # --- Python (fix + lint) ---
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-python:latest" /usr/local/bin/fix
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-python:latest" /usr/local/bin/lint
+podman run --rm -v "$(pwd)":/workspace \
+  "${REGISTRY}/lint-python:latest" /usr/local/bin/fix
+podman run --rm -v "$(pwd)":/workspace \
+  "${REGISTRY}/lint-python:latest" /usr/local/bin/lint
 
 # --- Bash (fix + lint) ---
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-bash:latest" /usr/local/bin/fix
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-bash:latest" /usr/local/bin/lint
+podman run --rm -v "$(pwd)":/workspace \
+  "${REGISTRY}/lint-bash:latest" /usr/local/bin/fix
+podman run --rm -v "$(pwd)":/workspace \
+  "${REGISTRY}/lint-bash:latest" /usr/local/bin/lint
 
 # --- Lint-only ---
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-yaml:latest" /usr/local/bin/lint
-podman run --rm -v "$(pwd)":/workspace "${REGISTRY}/lint-json:latest" /usr/local/bin/lint
+podman run --rm -v "$(pwd)":/workspace \
+  "${REGISTRY}/lint-yaml:latest" /usr/local/bin/lint
+podman run --rm -v "$(pwd)":/workspace \
+  "${REGISTRY}/lint-json:latest" /usr/local/bin/lint
 ```
 
-Then `chmod +x .git/hooks/pre-commit`. If any linter fails, the commit is blocked.
+Then `chmod +x .git/hooks/pre-commit`. If any linter
+fails, the commit is blocked.
 
 > **Tip:** Remove lines for languages your project doesn't use.
 
@@ -160,7 +182,7 @@ jobs:
 
 Add this to `.gitlab-ci.yml` in your project:
 
-### Single language
+### Single language (GitLab)
 
 ```yaml
 lint-python:
@@ -205,9 +227,13 @@ lint-yaml:
 
 ## Passing Linter Config Overrides
 
-The linters look for config files in the working directory (`/workspace`). Since your repo is mounted there, **any config file in your repo root is picked up automatically** — no extra steps needed.
+The linters look for config files in the working directory
+(`/workspace`). Since your repo is mounted there, **any
+config file in your repo root is picked up automatically**
+-- no extra steps needed.
 
-For example, if your repo has a `ruff.toml` at the root, the Python linter uses it.
+For example, if your repo has a `ruff.toml` at the root,
+the Python linter uses it.
 
 ### Common config files by linter
 
@@ -226,7 +252,8 @@ For example, if your repo has a `ruff.toml` at the root, the Python linter uses 
 
 ### Config files stored outside the repo
 
-If your config lives somewhere else (e.g., a shared company config), mount it explicitly:
+If your config lives somewhere else (e.g., a shared
+company config), mount it explicitly:
 
 ```bash
 # Mount a ruff config from your home directory
@@ -237,9 +264,11 @@ podman run --rm \
   /usr/local/bin/lint
 ```
 
-The `:ro` flag mounts it read-only so the container can't modify your config.
+The `:ro` flag mounts it read-only so the container
+can't modify your config.
 
-In GitHub Actions, use an extra step to copy the config before linting:
+In GitHub Actions, use an extra step to copy the config
+before linting:
 
 ```yaml
 steps:

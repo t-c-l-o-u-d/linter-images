@@ -11,13 +11,5 @@ ignore:
   - vulnerability: CVE-2025-61732
   - vulnerability: CVE-2025-68119
   - vulnerability: CVE-2025-68121
-  # lint-all: podman/skopeo Go dependencies — upstream Arch packages
-  - vulnerability: CVE-2025-47914
-  - vulnerability: CVE-2025-58181
-  - vulnerability: CVE-2025-66506
-  - vulnerability: CVE-2025-67499
-  - vulnerability: CVE-2026-0994
-  - vulnerability: CVE-2026-22772
-  - vulnerability: CVE-2026-24137
   # lint-css: js-yaml — upstream Arch package
   - vulnerability: CVE-2025-64718

@@ -28,7 +28,13 @@ fi
 errors=0
 
 echo "Running eslint..."
-if ! eslint "${js_files[@]}"; then
+es_args=()
+if [[ -f .linter/eslint.config.js ]]; then
+    es_args+=(--config .linter/eslint.config.js)
+elif [[ -f eslint.config.js ]]; then
+    es_args+=(--config eslint.config.js)
+fi
+if ! eslint "${es_args[@]}" "${js_files[@]}"; then
     echo "FAIL: eslint"
     errors=$((errors + 1))
 else
@@ -37,7 +43,13 @@ fi
 
 echo ""
 echo "Running biome check..."
-if ! biome check "${js_files[@]}"; then
+biome_args=()
+if [[ -f .linter/biome.json ]]; then
+    biome_args+=(--config-path .linter)
+elif [[ -f biome.json ]]; then
+    biome_args+=(--config-path .)
+fi
+if ! biome check "${biome_args[@]}" "${js_files[@]}"; then
     echo "FAIL: biome check"
     errors=$((errors + 1))
 else

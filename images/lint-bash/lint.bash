@@ -44,7 +44,13 @@ fi
 
 echo ""
 echo "Running shellcheck..."
-if ! shellcheck --external-sources "${bash_scripts[@]}"; then
+sc_args=(--external-sources)
+if [[ -f .linter/.shellcheckrc ]]; then
+    sc_args+=(--rcfile .linter/.shellcheckrc)
+elif [[ -f .shellcheckrc ]]; then
+    sc_args+=(--rcfile .shellcheckrc)
+fi
+if ! shellcheck "${sc_args[@]}" "${bash_scripts[@]}"; then
     echo "FAIL: shellcheck"
     errors=$((errors + 1))
 else

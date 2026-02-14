@@ -1,4 +1,1 @@
----
-config:
-  MD013:
-    code_blocks: false
+.linter/.markdownlint-cli2.yaml

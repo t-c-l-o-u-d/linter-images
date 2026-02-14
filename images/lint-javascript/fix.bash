@@ -26,9 +26,21 @@ if [[ ${#js_files[@]} -eq 0 ]]; then
 fi
 
 echo "Running eslint --fix..."
-eslint --fix "${js_files[@]}"
+es_args=(--fix)
+if [[ -f .linter/eslint.config.js ]]; then
+    es_args+=(--config .linter/eslint.config.js)
+elif [[ -f eslint.config.js ]]; then
+    es_args+=(--config eslint.config.js)
+fi
+eslint "${es_args[@]}" "${js_files[@]}"
 
 echo "Running biome format --write..."
-biome format --write "${js_files[@]}"
+biome_args=(--write)
+if [[ -f .linter/biome.json ]]; then
+    biome_args+=(--config-path .linter)
+elif [[ -f biome.json ]]; then
+    biome_args+=(--config-path .)
+fi
+biome format "${biome_args[@]}" "${js_files[@]}"
 
 echo "Done. Run lint to verify."

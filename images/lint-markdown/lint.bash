@@ -28,7 +28,13 @@ fi
 errors=0
 
 echo "Running markdownlint-cli2..."
-if ! markdownlint-cli2 "${md_files[@]}"; then
+mdl_args=()
+if [[ -f .linter/.markdownlint-cli2.yaml ]]; then
+    mdl_args+=(--config .linter/.markdownlint-cli2.yaml)
+elif [[ -f .markdownlint-cli2.yaml ]]; then
+    mdl_args+=(--config .markdownlint-cli2.yaml)
+fi
+if ! markdownlint-cli2 "${mdl_args[@]}" "${md_files[@]}"; then
     echo "FAIL: markdownlint-cli2"
     errors=$((errors + 1))
 else

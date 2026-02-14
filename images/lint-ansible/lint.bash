@@ -21,7 +21,13 @@ echo ""
 errors=0
 
 echo "Running ansible-lint..."
-if ! ansible-lint; then
+al_args=()
+if [[ -f .linter/.ansible-lint ]]; then
+    al_args+=(--config-file .linter/.ansible-lint)
+elif [[ -f .ansible-lint ]]; then
+    al_args+=(--config-file .ansible-lint)
+fi
+if ! ansible-lint "${al_args[@]}"; then
     echo "FAIL: ansible-lint"
     errors=$((errors + 1))
 else

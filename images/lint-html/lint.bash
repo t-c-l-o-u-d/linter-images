@@ -26,9 +26,15 @@ if [[ ${#html_files[@]} -eq 0 ]]; then
 fi
 
 echo "Running tidy (syntax check)..."
+tidy_args=(-quiet -errors)
+if [[ -f .linter/.tidyrc ]]; then
+    tidy_args+=(-config .linter/.tidyrc)
+elif [[ -f .tidyrc ]]; then
+    tidy_args+=(-config .tidyrc)
+fi
 errors=0
 for f in "${html_files[@]}"; do
-    if ! tidy -quiet -errors "$f" > /dev/null 2>&1; then
+    if ! tidy "${tidy_args[@]}" "$f" > /dev/null 2>&1; then
         echo "  WARN: $f"
         errors=$((errors + 1))
     fi

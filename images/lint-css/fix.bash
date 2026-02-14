@@ -26,9 +26,21 @@ if [[ ${#css_files[@]} -eq 0 ]]; then
 fi
 
 echo "Running stylelint --fix..."
-stylelint --fix "${css_files[@]}"
+sl_args=(--fix)
+if [[ -f .linter/.stylelintrc.json ]]; then
+    sl_args+=(--config .linter/.stylelintrc.json)
+elif [[ -f .stylelintrc.json ]]; then
+    sl_args+=(--config .stylelintrc.json)
+fi
+stylelint "${sl_args[@]}" "${css_files[@]}"
 
 echo "Running biome format --write..."
-biome format --write "${css_files[@]}"
+biome_args=(--write)
+if [[ -f .linter/biome.json ]]; then
+    biome_args+=(--config-path .linter)
+elif [[ -f biome.json ]]; then
+    biome_args+=(--config-path .)
+fi
+biome format "${biome_args[@]}" "${css_files[@]}"
 
 echo "Done. Run lint to verify."

@@ -27,6 +27,19 @@ fi
 
 errors=0
 
+# vint auto-discovers .vintrc.yaml from cwd; symlink if in .linter/
+vint_link=""
+if [[ -f .linter/.vintrc.yaml ]] && [[ ! -f .vintrc.yaml ]]; then
+    ln --symbolic .linter/.vintrc.yaml .vintrc.yaml
+    vint_link=1
+fi
+cleanup_vint() {
+    if [[ -n "$vint_link" ]]; then
+        rm --force .vintrc.yaml
+    fi
+}
+trap cleanup_vint EXIT
+
 echo "Running vint..."
 if ! vint "${vim_files[@]}"; then
     echo "FAIL: vint"

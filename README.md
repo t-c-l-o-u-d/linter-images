@@ -246,7 +246,10 @@ the Python linter uses it.
 
 ### Common config files by linter
 
-| Image                | Config files (repo root)             |
+Place config files in `.linter/` (preferred) or the
+repo root. The `.linter/` path takes priority.
+
+| Image                | Config files                         |
 | -------------------- | ------------------------------------ |
 | `lint-ansible`       | `.ansible-lint`                      |
 | `lint-bash`          | `.shellcheckrc`                      |
@@ -255,9 +258,9 @@ the Python linter uses it.
 | `lint-html`          | `.tidyrc`                            |
 | `lint-javascript`    | `eslint.config.js`, `biome.json`     |
 | `lint-markdown`      | `.markdownlint-cli2.yaml`            |
-| `lint-python`        | `ruff.toml`, `pyproject.toml`        |
+| `lint-python`        | `ruff.toml`, `mypy.ini`              |
 | `lint-vim`           | `.vintrc.yaml`                       |
-| `lint-yaml`          | `.yamllint.yaml`, `.yamllint`        |
+| `lint-yaml`          | `.yamllint.yaml`                     |
 
 ### Config files stored outside the repo
 

@@ -28,7 +28,13 @@ fi
 errors=0
 
 echo "Running stylelint..."
-if ! stylelint "${css_files[@]}"; then
+sl_args=()
+if [[ -f .linter/.stylelintrc.json ]]; then
+    sl_args+=(--config .linter/.stylelintrc.json)
+elif [[ -f .stylelintrc.json ]]; then
+    sl_args+=(--config .stylelintrc.json)
+fi
+if ! stylelint "${sl_args[@]}" "${css_files[@]}"; then
     echo "FAIL: stylelint"
     errors=$((errors + 1))
 else
@@ -37,7 +43,13 @@ fi
 
 echo ""
 echo "Running biome check..."
-if ! biome check "${css_files[@]}"; then
+biome_args=()
+if [[ -f .linter/biome.json ]]; then
+    biome_args+=(--config-path .linter)
+elif [[ -f biome.json ]]; then
+    biome_args+=(--config-path .)
+fi
+if ! biome check "${biome_args[@]}" "${css_files[@]}"; then
     echo "FAIL: biome check"
     errors=$((errors + 1))
 else

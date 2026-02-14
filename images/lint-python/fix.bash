@@ -26,9 +26,15 @@ if [[ ${#py_files[@]} -eq 0 ]]; then
 fi
 
 echo "Running ruff check --fix..."
-ruff check --fix "${py_files[@]}"
+ruff_args=()
+if [[ -f .linter/ruff.toml ]]; then
+    ruff_args+=(--config .linter/ruff.toml)
+elif [[ -f ruff.toml ]]; then
+    ruff_args+=(--config ruff.toml)
+fi
+ruff check --fix "${ruff_args[@]}" "${py_files[@]}"
 
 echo "Running ruff format..."
-ruff format "${py_files[@]}"
+ruff format "${ruff_args[@]}" "${py_files[@]}"
 
 echo "Done. Run lint to verify."

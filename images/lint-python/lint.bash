@@ -28,7 +28,13 @@ fi
 errors=0
 
 echo "Running ruff check..."
-if ! ruff check "${py_files[@]}"; then
+ruff_args=()
+if [[ -f .linter/ruff.toml ]]; then
+    ruff_args+=(--config .linter/ruff.toml)
+elif [[ -f ruff.toml ]]; then
+    ruff_args+=(--config ruff.toml)
+fi
+if ! ruff check "${ruff_args[@]}" "${py_files[@]}"; then
     echo "FAIL: ruff check"
     errors=$((errors + 1))
 else
@@ -37,7 +43,7 @@ fi
 
 echo ""
 echo "Running ruff format --check..."
-if ! ruff format --check "${py_files[@]}"; then
+if ! ruff format --check "${ruff_args[@]}" "${py_files[@]}"; then
     echo "FAIL: ruff format"
     errors=$((errors + 1))
 else
@@ -46,7 +52,13 @@ fi
 
 echo ""
 echo "Running mypy..."
-if ! mypy --strict "${py_files[@]}"; then
+mypy_args=(--strict)
+if [[ -f .linter/mypy.ini ]]; then
+    mypy_args+=(--config-file .linter/mypy.ini)
+elif [[ -f mypy.ini ]]; then
+    mypy_args+=(--config-file mypy.ini)
+fi
+if ! mypy "${mypy_args[@]}" "${py_files[@]}"; then
     echo "FAIL: mypy"
     errors=$((errors + 1))
 else

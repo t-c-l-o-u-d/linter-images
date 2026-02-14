@@ -31,6 +31,18 @@ ghcr.io via GitHub Actions.
 - Long-form flags for all commands
   (e.g. `sed --in-place --expression`
   not `sed -i -e`)
+- Multi-line container commands: break on each flag,
+  one per line. Example:
+
+  ```bash
+  podman run \
+      --rm \
+      --pull always \
+      --volume "$(pwd)":/workspace \
+      IMAGE \
+      /usr/local/bin/lint
+  ```
+
 - Separate `RUN` per step with a comment above each
 - Packages listed one per line, alphabetically sorted
 - OCI labels at the bottom

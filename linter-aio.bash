@@ -263,10 +263,18 @@ fi
                 has_fix=1
             fi
             hook_body+="
-\"\$RUNTIME\" run --rm --pull always --volume \"\$(pwd)\":/workspace \\
-    \"\${REGISTRY}/${img}:latest\" /usr/local/bin/fix
-\"\$RUNTIME\" run --rm --pull always --volume \"\$(pwd)\":/workspace \\
-    \"\${REGISTRY}/${img}:latest\" /usr/local/bin/lint"
+\"\$RUNTIME\" run \\
+    --rm \\
+    --pull always \\
+    --volume \"\$(pwd)\":/workspace \\
+    \"\${REGISTRY}/${img}:latest\" \\
+    /usr/local/bin/fix
+\"\$RUNTIME\" run \\
+    --rm \\
+    --pull always \\
+    --volume \"\$(pwd)\":/workspace \\
+    \"\${REGISTRY}/${img}:latest\" \\
+    /usr/local/bin/lint"
         fi
     done
 
@@ -281,8 +289,12 @@ fi
                 has_lint=1
             fi
             hook_body+="
-\"\$RUNTIME\" run --rm --pull always --volume \"\$(pwd)\":/workspace \\
-    \"\${REGISTRY}/${img}:latest\" /usr/local/bin/lint"
+\"\$RUNTIME\" run \\
+    --rm \\
+    --pull always \\
+    --volume \"\$(pwd)\":/workspace \\
+    \"\${REGISTRY}/${img}:latest\" \\
+    /usr/local/bin/lint"
         fi
     done
     hook_body+="

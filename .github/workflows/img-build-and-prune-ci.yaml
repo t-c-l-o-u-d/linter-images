@@ -64,7 +64,12 @@ jobs:
         shell: bash
         run: |
           mkdir --parents "${HOME}/.docker"
-          echo "${{ secrets.GITHUB_TOKEN }}" | buildah login --authfile "${HOME}/.docker/config.json" ghcr.io -u ${{ github.actor }} --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+            | buildah login \
+              --authfile "${HOME}/.docker/config.json" \
+              --username "${{ github.actor }}" \
+              --password-stdin \
+              ghcr.io
       - name: Scan Container Image (trivy)
         uses: aquasecurity/trivy-action@0.34.0
         with:
@@ -84,7 +89,12 @@ jobs:
         shell: bash
         run: |
           mkdir --parents "${HOME}/.docker"
-          echo "${{ secrets.GITHUB_TOKEN }}" | buildah login --authfile "${HOME}/.docker/config.json" ghcr.io -u ${{ github.actor }} --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+            | buildah login \
+              --authfile "${HOME}/.docker/config.json" \
+              --username "${{ github.actor }}" \
+              --password-stdin \
+              ghcr.io
       - name: Scan Container Image (grype)
         uses: anchore/scan-action@v7.3.2
         env:

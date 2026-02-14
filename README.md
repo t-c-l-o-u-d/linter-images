@@ -13,28 +13,20 @@ file types and runs the right linters automatically.
 ### Lint everything
 
 ```bash
-curl -sL https://raw.githubusercontent.com/\
-t-c-l-o-u-d/linter-images/main/linter-aio.bash \
-  | bash
+curl -sL https://github.com/t-c-l-o-u-d/linter-images/raw/main/linter-aio.bash | bash
 ```
 
 ### Fix and lint everything
 
 ```bash
-curl -sL https://raw.githubusercontent.com/\
-t-c-l-o-u-d/linter-images/main/linter-aio.bash \
-  | bash -s fix
-curl -sL https://raw.githubusercontent.com/\
-t-c-l-o-u-d/linter-images/main/linter-aio.bash \
-  | bash -s lint
+curl -sL https://github.com/t-c-l-o-u-d/linter-images/raw/main/linter-aio.bash | bash -s fix
+curl -sL https://github.com/t-c-l-o-u-d/linter-images/raw/main/linter-aio.bash | bash -s lint
 ```
 
 ### Install as a pre-commit hook
 
 ```bash
-curl -sL https://raw.githubusercontent.com/\
-t-c-l-o-u-d/linter-images/main/linter-aio.bash \
-  | bash -s install
+curl -sL https://github.com/t-c-l-o-u-d/linter-images/raw/main/linter-aio.bash | bash -s install
 ```
 
 This backs up any existing pre-commit hook and installs
@@ -84,9 +76,7 @@ same way with `docker` instead of `podman`.
 The easiest way to install a pre-commit hook:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/\
-t-c-l-o-u-d/linter-images/main/linter-aio.bash \
-  | bash -s install
+curl -sL https://github.com/t-c-l-o-u-d/linter-images/raw/main/linter-aio.bash | bash -s install
 ```
 
 This auto-detects your file types, generates targeted

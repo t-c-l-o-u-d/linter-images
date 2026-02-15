@@ -58,14 +58,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image:
-          - lint-python
-          - lint-bash
-          - lint-yaml
-          - lint-javascript
+        linter:
+          - python
+          - bash
+          - yaml
+          - javascript
           # add or remove as needed
     container:
-      image: ghcr.io/t-c-l-o-u-d/linter-images/${{ matrix.image }}:latest
+      image: ghcr.io/t-c-l-o-u-d/linter-images/lint-${{ matrix.linter }}:latest
     steps:
       - uses: actions/checkout@v6
       - run: /usr/local/bin/lint

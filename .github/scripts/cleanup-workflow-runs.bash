@@ -7,11 +7,10 @@ set -euo pipefail
 
 KEEP_COUNT="${KEEP_COUNT:-3}"
 
-# List all workflow files in the repository
-WORKFLOWS=$(gh workflow list --json id,name --jq '.[].id')
+# List all workflow files in the repository (tab-separated: id \t name)
+WORKFLOWS=$(gh workflow list --json id,name --jq '.[] | [(.id | tostring), .name] | join("\t")')
 
-while IFS= read -r WORKFLOW_ID; do
-  WORKFLOW_NAME=$(gh workflow view "$WORKFLOW_ID" --json name --jq '.name')
+while IFS=$'\t' read -r WORKFLOW_ID WORKFLOW_NAME; do
   echo "::group::${WORKFLOW_NAME} (ID ${WORKFLOW_ID})"
 
   # Get all run IDs for this workflow, sorted newest first (default)

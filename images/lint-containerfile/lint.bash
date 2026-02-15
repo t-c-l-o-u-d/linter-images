@@ -18,7 +18,9 @@ cat << 'EOF'
 EOF
 echo ""
 
-mapfile -t containerfiles < <(git ls-files 'Containerfile' '**/Containerfile')
+mapfile -t containerfiles < <(git ls-files \
+    'Containerfile' 'Containerfile.*' 'Dockerfile' 'Dockerfile.*' \
+    '**/Containerfile' '**/Containerfile.*' '**/Dockerfile' '**/Dockerfile.*')
 
 if [[ ${#containerfiles[@]} -eq 0 ]]; then
     echo "No Containerfiles found, skipping."

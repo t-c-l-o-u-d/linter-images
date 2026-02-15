@@ -20,7 +20,7 @@ SUPPORTED_MIME_RE="^text/x-shellscript$"
 # non-code files to silently skip
 SKIP_EXT_RE="^(txt|lock|toml|cfg|ini|conf|gitignore|gitattributes|editorconfig|trivyignore|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$"
 # known filenames we handle
-SUPPORTED_NAMES_RE="^(Cargo\.toml|Containerfile|vimrc|ansible\.cfg|site\.yml|site\.yaml)$"
+SUPPORTED_NAMES_RE="^(Cargo\.toml|Containerfile(\..*)?|Dockerfile(\..*)?|vimrc|ansible\.cfg|site\.yml|site\.yaml)$"
 # non-code filenames to silently skip
 SKIP_NAMES_RE="^(COPYING|LICENSE|LICENCE|AUTHORS|CHANGELOG|Makefile)$"
 
@@ -104,7 +104,9 @@ detect_images() {
     fi
 
     # containerfile
-    if git ls-files 'Containerfile' '**/Containerfile' | grep --quiet .; then
+    if git ls-files 'Containerfile' 'Containerfile.*' 'Dockerfile' 'Dockerfile.*' \
+        '**/Containerfile' '**/Containerfile.*' '**/Dockerfile' '**/Dockerfile.*' \
+        | grep --quiet .; then
         needed[lint-containerfile]=1
     fi
 

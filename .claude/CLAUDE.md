@@ -101,6 +101,14 @@ the repo root.
   both the old and new paths in the **same commit**
   so git detects the rename.
 
+## Documentation
+
+- Keep all markdown files (`README.md`, `docs/`)
+  in sync with the codebase.
+- When a change affects documented behavior, update
+  the relevant docs in the same commit.
+- Outdated docs are treated as bugs.
+
 ## Maintenance
 
 - `.linter/.trivyignore` and `.linter/.grype.yaml`

@@ -33,6 +33,11 @@ curl -sL https://github.com/t-c-l-o-u-d/linter-images/raw/main/linter-aio.bash |
 This backs up any existing pre-commit hook and installs
 one that runs fix + lint before every commit.
 
+## Documentation
+
+See [docs/](docs/) for detailed usage, pre-commit
+hook setup, and per-image references.
+
 ## Linter Config Overrides
 
 The linters look for config files in the repository root or `.linter/`.

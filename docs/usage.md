@@ -21,6 +21,11 @@ podman run \
 That's it. It exits `0` on pass, `1` on fail. Works the
 same way with `docker` instead of `podman`.
 
+> **Note:** `lint-rust` requires a read-write mount
+> (`:z` instead of `:ro,z`) because cargo writes
+> `Cargo.lock` during dependency resolution. The AIO
+> script handles this automatically.
+
 ---
 
 ## Pre-commit Hook

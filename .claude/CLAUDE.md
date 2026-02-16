@@ -79,6 +79,14 @@ ghcr.io via GitHub Actions.
   and `latest`
 - Link: <https://github.com/t-c-l-o-u-d>
 
+## Linting
+
+Do not run linters (shellcheck, shellharden, hadolint,
+markdownlint, yamllint, etc.) directly. The pre-commit
+hook runs `bash linter-aio.bash fix` then
+`bash linter-aio.bash lint` automatically on every
+commit. To lint manually, use `bash linter-aio.bash lint`.
+
 ## Shell commands
 
 Run all commands directly from the repo root

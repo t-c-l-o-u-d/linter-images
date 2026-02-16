@@ -432,6 +432,14 @@ install_hook() {
         exit 1
     }
 
+    # resolve the worktree root (handles bare repos with external worktrees)
+    local workspace
+    workspace="$(git rev-parse --show-toplevel 2>/dev/null)" || {
+        echo "ERROR: Cannot resolve worktree for this repository." >&2
+        exit 1
+    }
+    cd "$workspace"
+
     local hooks_dir="${git_dir}/hooks"
     local hook_path="${hooks_dir}/pre-commit"
 
@@ -545,6 +553,13 @@ main() {
         echo "Run this script from inside a git-managed project." >&2
         exit 1
     }
+
+    # resolve the worktree root (handles bare repos with external worktrees)
+    WORKSPACE="$(git rev-parse --show-toplevel 2>/dev/null)" || {
+        echo "ERROR: Cannot resolve worktree for this repository." >&2
+        exit 1
+    }
+    cd "$WORKSPACE"
 
     RUNTIME="$(detect_runtime)"
 

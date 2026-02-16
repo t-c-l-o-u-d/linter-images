@@ -21,9 +21,9 @@ elif [[ -f .stylelintrc.json ]]; then
     sl_args+=(--config .stylelintrc.json)
 else
     sl_default_config=$(mktemp --suffix=.json)
-    echo '{"extends":"stylelint-config-standard"}' > "${sl_default_config}"
+    echo '{"extends":"stylelint-config-standard"}' > "$sl_default_config"
     sl_args+=(--config-basedir /usr/lib/node_modules)
-    sl_args+=(--config "${sl_default_config}")
+    sl_args+=(--config "$sl_default_config")
 fi
 stylelint "${sl_args[@]}" "${css_files[@]}"
 

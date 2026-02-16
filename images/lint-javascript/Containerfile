@@ -16,6 +16,8 @@ COPY lint.bash /usr/local/bin/lint
 COPY fix.bash /usr/local/bin/fix
 RUN chmod +x /usr/local/bin/lint /usr/local/bin/fix
 
+ENV LINTER_IMAGE=lint-javascript
+
 WORKDIR /workspace
 
 LABEL org.opencontainers.image.authors "https://github.com/t-c-l-o-u-d"

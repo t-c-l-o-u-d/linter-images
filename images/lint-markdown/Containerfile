@@ -13,6 +13,8 @@ RUN pacman --sync --clean --clean --noconfirm
 COPY lint.bash /usr/local/bin/lint
 RUN chmod +x /usr/local/bin/lint
 
+ENV LINTER_IMAGE=lint-markdown
+
 WORKDIR /workspace
 
 LABEL org.opencontainers.image.authors "https://github.com/t-c-l-o-u-d"

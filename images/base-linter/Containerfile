@@ -18,8 +18,15 @@ RUN pacman-key --init && \
 # update all packages
 RUN pacman --sync --refresh --sysupgrade --noconfirm
 
+# install shared utilities
+RUN pacman --sync --refresh --noconfirm \
+    figlet
+
 # clean up pacman cache
 RUN pacman --sync --clean --clean --noconfirm
+
+# install shared header function
+COPY linter-header.bash /usr/local/lib/linter-header.bash
 
 LABEL org.opencontainers.image.authors "https://github.com/t-c-l-o-u-d"
 LABEL org.opencontainers.image.description "Base linter image: Arch Linux with pacman setup"

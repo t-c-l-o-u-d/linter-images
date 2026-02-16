@@ -21,6 +21,8 @@ RUN curl --silent --fail --location \
 COPY lint.bash /usr/local/bin/lint
 RUN chmod +x /usr/local/bin/lint
 
+ENV LINTER_IMAGE=lint-containerfile
+
 WORKDIR /workspace
 
 LABEL org.opencontainers.image.authors "https://github.com/t-c-l-o-u-d"

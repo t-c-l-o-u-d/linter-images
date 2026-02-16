@@ -15,10 +15,47 @@ declare -A FIX_SUPPORTED=(
     [lint-yaml]=1
 )
 
-# detection rules: image|match_type|pattern
-# match types: ext, file, prefix, shebang, dir, glob
-# image "skip" silently ignores a file type
-LINTER_RULES=(
+# --- Supersession rules ---
+# When a domain-specific linter is detected, it supersedes the generic
+# format linter.  e.g. ansible-lint runs yamllint internally, so
+# running lint-yaml separately is redundant and may conflict.
+declare -A SUPERSEDES=(
+    [lint-ansible]=lint-yaml
+)
+
+# --- MIME-based detection (content is truth) ---
+# Maps MIME types to linter images. Checked FIRST so that file content
+# always wins over filename patterns.
+declare -A MIME_RULES=(
+    # file --brief --mime-type detects these from content:
+    [application/json]=lint-json
+    [text/html]=lint-html
+    [text/x-shellscript]=lint-bash
+    [application/x-shellscript]=lint-bash
+    [text/x-script.python]=lint-python
+    [text/x-python]=lint-python
+
+    # mimetype (XDG MIME, --magic-only) adds these:
+    [application/yaml]=lint-yaml
+    [text/markdown]=lint-markdown
+    [text/css]=lint-css
+    [text/csv]=lint-csv
+    [text/xml]=skip
+    [application/xml]=skip
+)
+
+# --- Shebang-based detection ---
+# Maps shebang interpreters to linter images. Checked SECOND, after MIME.
+declare -A SHEBANG_RULES=(
+    [bash]=lint-bash
+    [python]=lint-python
+    [python3]=lint-python
+)
+
+# --- Pattern-based detection (LAST RESORT for text/plain files) ---
+# Only consulted when MIME detection and shebang detection both fail.
+# match types: ext, file, prefix, dir, glob
+PATTERN_RULES=(
     # ansible (project-level markers)
     "lint-ansible|dir|roles"
     "lint-ansible|file|ansible.cfg"
@@ -27,12 +64,11 @@ LINTER_RULES=(
     "lint-ansible|glob|playbooks/*.yml"
     "lint-ansible|glob|playbooks/*.yaml"
 
-    # bash (extension, filename, and shebang-based)
+    # bash
     "lint-bash|ext|bash"
     "lint-bash|ext|sh"
     "lint-bash|file|.bashrc"
     "lint-bash|file|.bash_profile"
-    "lint-bash|shebang|bash"
 
     # containerfile (prefix-based)
     "lint-containerfile|prefix|Containerfile"
@@ -144,113 +180,124 @@ detect_runtime() {
 }
 
 detect_images() {
-    # preprocess rules into typed lookup tables
-    local -A rule_ext=()
-    local -A rule_file=()
-    local -a rule_prefix=()
-    local -a rule_shebang=()
-    local -a rule_dir=()
-    local -a rule_glob=()
+    # preprocess pattern rules into typed lookup tables
+    local -A pat_ext=()
+    local -A pat_file=()
+    local -a pat_prefix=()
+    local -a pat_dir=()
+    local -a pat_glob=()
     local -A needed=()
     local -A unsupported=()
     local rule image match_type pattern entry
-    local f base ext matched img shebang interp mime desc
+    local f base ext matched img mime xdg_mime shebang interp desc
+    local has_mimetype=0
 
-    for rule in "${LINTER_RULES[@]}"; do
+    # check if mimetype (perl-file-mimeinfo) is available
+    command -v mimetype > /dev/null 2>&1 && has_mimetype=1
+
+    for rule in "${PATTERN_RULES[@]}"; do
         IFS='|' read -r image match_type pattern <<< "$rule"
         case "$match_type" in
-            ext)     rule_ext["$pattern"]="$image" ;;
-            file)    rule_file["$pattern"]="$image" ;;
-            prefix)  rule_prefix+=("$image|$pattern") ;;
-            shebang) rule_shebang+=("$image|$pattern") ;;
-            dir)     rule_dir+=("$image|$pattern") ;;
-            glob)    rule_glob+=("$image|$pattern") ;;
+            ext)    pat_ext["$pattern"]="$image" ;;
+            file)   pat_file["$pattern"]="$image" ;;
+            prefix) pat_prefix+=("$image|$pattern") ;;
+            dir)    pat_dir+=("$image|$pattern") ;;
+            glob)   pat_glob+=("$image|$pattern") ;;
         esac
     done
 
     # project-level detection (dir and glob rules)
-    for entry in "${rule_dir[@]}"; do
+    for entry in "${pat_dir[@]}"; do
         IFS='|' read -r image pattern <<< "$entry"
         [[ -d "$pattern" ]] && needed["$image"]=1
     done
-    for entry in "${rule_glob[@]}"; do
+    for entry in "${pat_glob[@]}"; do
         IFS='|' read -r image pattern <<< "$entry"
         git -c core.quotePath=false ls-files "$pattern" | grep --quiet . && needed["$image"]=1
     done
 
     # single-pass file walk
     while IFS= read -r f; do
+        [[ -f "$f" ]] || continue
         base="$(basename "$f")"
         ext=""
-        [[ "$f" == *.* ]] && ext="${f##*.}"
+        [[ "$base" == *.* ]] && ext="${base##*.}"
         matched=0
 
-        # 1. exact filename (O(1) lookup)
-        if [[ -n "${rule_file[$base]+x}" ]]; then
-            img="${rule_file[$base]}"
+        # --- STEP 1: MIME detection (content-based, always runs) ---
+        mime="$(file --brief --mime-type "$f" 2>/dev/null)" || mime=""
+
+        # skip binary, image, and inode types silently
+        case "$mime" in
+            application/octet-stream|application/gzip|application/zip) continue ;;
+            inode/*|image/*|audio/*|video/*) continue ;;
+        esac
+
+        # check file's MIME against content rules
+        if [[ -n "$mime" && -n "${MIME_RULES[$mime]+x}" ]]; then
+            img="${MIME_RULES[$mime]}"
             [[ "$img" != "skip" ]] && needed["$img"]=1
             matched=1
         fi
 
-        # 2. extension (O(1) lookup — checked before prefix so that
-        #    e.g. Containerfile.bu matches "skip|ext|bu" not "prefix|Containerfile")
-        if [[ -n "$ext" && -n "${rule_ext[$ext]+x}" ]]; then
-            img="${rule_ext[$ext]}"
-            [[ "$img" != "skip" ]] && needed["$img"]=1
-            matched=1
+        # try mimetype --magic-only for additional content detection
+        if [[ $matched -eq 0 && $has_mimetype -eq 1 ]]; then
+            xdg_mime="$(mimetype --brief --magic-only "$f" 2>/dev/null)" || xdg_mime=""
+            if [[ -n "$xdg_mime" && -n "${MIME_RULES[$xdg_mime]+x}" ]]; then
+                img="${MIME_RULES[$xdg_mime]}"
+                [[ "$img" != "skip" ]] && needed["$img"]=1
+                matched=1
+            fi
         fi
 
-        # 3. filename prefix (e.g. Containerfile, Containerfile.alpine)
+        # --- STEP 2: shebang detection ---
         if [[ $matched -eq 0 ]]; then
-            for entry in "${rule_prefix[@]}"; do
-                IFS='|' read -r img pattern <<< "$entry"
-                if [[ "$base" == "$pattern" || "$base" == "$pattern".* ]]; then
-                    [[ "$img" != "skip" ]] && needed["$img"]=1
-                    matched=1
-                    break
-                fi
-            done
-        fi
-
-        # 4. shebang (only if unmatched — avoids reading every file)
-        if [[ $matched -eq 0 ]]; then
-            shebang="$(head --lines=1 "$f" 2>/dev/null)" || shebang=""
+            shebang="$(head --lines=1 --bytes=256 "$f" 2>/dev/null)" || shebang=""
             if [[ "$shebang" =~ ^#! ]]; then
-                for entry in "${rule_shebang[@]}"; do
-                    IFS='|' read -r img pattern <<< "$entry"
-                    if [[ "$shebang" =~ ^#!.*${pattern} ]]; then
-                        needed["$img"]=1
-                        matched=1
-                        break
-                    fi
-                done
-
-                # unmatched shebang — flag interpreter as unsupported
-                if [[ $matched -eq 0 ]]; then
-                    interp="${shebang##*[\\/]}"
-                    interp="${interp%% *}"
+                # extract interpreter name (e.g. /usr/bin/env bash → bash)
+                interp="${shebang##*[\\/]}"
+                interp="${interp%% *}"
+                if [[ -n "${SHEBANG_RULES[$interp]+x}" ]]; then
+                    needed["${SHEBANG_RULES[$interp]}"]=1
+                    matched=1
+                else
                     unsupported["${base} (${interp})"]=1
                     matched=1
                 fi
             fi
         fi
 
-        # 5. unsupported (still unmatched after all checks)
+        # --- STEP 3: pattern fallback (LAST RESORT for text/plain) ---
         if [[ $matched -eq 0 ]]; then
-            mime="$(file --brief --mime-type "$f" 2>/dev/null)" || continue
-
-            # skip binary and image files silently
-            if [[ "$mime" == application/octet-stream ]] \
-                || [[ "$mime" == inode/* ]] \
-                || [[ "$mime" == image/* ]]; then
-                continue
+            # 3a. exact filename
+            if [[ -n "${pat_file[$base]+x}" ]]; then
+                img="${pat_file[$base]}"
+                [[ "$img" != "skip" ]] && needed["$img"]=1
+                matched=1
             fi
 
-            # skip non-bash shell scripts silently
-            if [[ "$mime" == text/x-shellscript ]]; then
-                continue
+            # 3b. extension
+            if [[ $matched -eq 0 && -n "$ext" && -n "${pat_ext[$ext]+x}" ]]; then
+                img="${pat_ext[$ext]}"
+                [[ "$img" != "skip" ]] && needed["$img"]=1
+                matched=1
             fi
 
+            # 3c. filename prefix (e.g. Containerfile, Containerfile.alpine)
+            if [[ $matched -eq 0 ]]; then
+                for entry in "${pat_prefix[@]}"; do
+                    IFS='|' read -r img pattern <<< "$entry"
+                    if [[ "$base" == "$pattern" || "$base" == "$pattern".* ]]; then
+                        [[ "$img" != "skip" ]] && needed["$img"]=1
+                        matched=1
+                        break
+                    fi
+                done
+            fi
+        fi
+
+        # --- STEP 4: flag unrecognized text files ---
+        if [[ $matched -eq 0 ]]; then
             if [[ -n "$ext" ]]; then
                 unsupported[".${ext}"]=1
             else
@@ -267,6 +314,15 @@ detect_images() {
             echo "  - ${desc}" >&2
         done < <(printf '%s\n' "${!unsupported[@]}" | sort)
     fi
+
+    # apply supersession rules: domain-specific linters replace generic ones
+    local specific generic
+    for specific in "${!SUPERSEDES[@]}"; do
+        if [[ -n "${needed[$specific]+x}" ]]; then
+            generic="${SUPERSEDES[$specific]}"
+            unset "needed[$generic]"
+        fi
+    done
 
     # return sorted list of needed images
     [[ ${#needed[@]} -gt 0 ]] && printf '%s\n' "${!needed[@]}" | sort

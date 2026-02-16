@@ -22,15 +22,14 @@ if [[ -f .linter/.stylelintrc.json ]]; then
 elif [[ -f .stylelintrc.json ]]; then
     sl_args+=(--config .stylelintrc.json)
 else
-    echo "SKIP: stylelint (no config found)"
+    sl_args+=(--config-basedir /usr/lib/node_modules)
+    sl_args+=(--config '{"extends":"stylelint-config-standard"}')
 fi
-if [[ ${#sl_args[@]} -gt 0 ]]; then
-    if ! stylelint "${sl_args[@]}" "${css_files[@]}"; then
-        echo "FAIL: stylelint"
-        errors=$((errors + 1))
-    else
-        echo "PASS: stylelint"
-    fi
+if ! stylelint "${sl_args[@]}" "${css_files[@]}"; then
+    echo "FAIL: stylelint"
+    errors=$((errors + 1))
+else
+    echo "PASS: stylelint"
 fi
 
 echo ""

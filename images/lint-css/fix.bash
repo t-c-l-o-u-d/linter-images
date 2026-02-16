@@ -20,11 +20,10 @@ if [[ -f .linter/.stylelintrc.json ]]; then
 elif [[ -f .stylelintrc.json ]]; then
     sl_args+=(--config .stylelintrc.json)
 else
-    echo "SKIP: stylelint (no config found)"
+    sl_args+=(--config-basedir /usr/lib/node_modules)
+    sl_args+=(--config '{"extends":"stylelint-config-standard"}')
 fi
-if [[ ${#sl_args[@]} -gt 1 ]]; then
-    stylelint "${sl_args[@]}" "${css_files[@]}"
-fi
+stylelint "${sl_args[@]}" "${css_files[@]}"
 
 echo "Running biome format --write..."
 mapfile -t css_only < <(printf '%s\n' "${css_files[@]}" | grep --extended-regexp '\.css$')

@@ -6,7 +6,8 @@ FROM ghcr.io/t-c-l-o-u-d/linter-images/base-linter:latest
 RUN pacman --sync --refresh --noconfirm \
     biome \
     nodejs \
-    stylelint
+    stylelint \
+    stylelint-config-standard
 
 # clean up pacman cache
 RUN pacman --sync --clean --clean --noconfirm

@@ -582,7 +582,7 @@ main() {
     if [[ "$GIT_ABS_DIR" != "${WORKTREE}/.git" ]]; then
         MOUNT_DIR="$(mktemp -d)"
         trap 'rm -rf "$MOUNT_DIR"' EXIT
-        git ls-files --full-name -z | while IFS= read -r -d '' f; do
+        git ls-files --full-name -z "$WORKTREE" | while IFS= read -r -d '' f; do
             mkdir -p "$MOUNT_DIR/$(dirname "$f")"
             cp -- "$WORKTREE/$f" "$MOUNT_DIR/$f"
         done

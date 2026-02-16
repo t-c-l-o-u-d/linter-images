@@ -13,18 +13,37 @@ if [[ ${#csv_files[@]} -eq 0 ]]; then
     exit 0
 fi
 
-echo "Running csv syntax check..."
 errors=0
-for f in "${csv_files[@]}"; do
-    if ! output=$(python3 /usr/local/lib/csvcheck.py "$f" 2>&1); then
-        echo "  ${f}: ${output}"
+
+echo "Running csvclean..."
+if ! csvclean --dry-run "${csv_files[@]}"; then
+    echo "FAIL: csvclean"
+    errors=$((errors + 1))
+else
+    echo "PASS: csvclean"
+fi
+
+schema_file=""
+if [[ -f .linter/csv-schema.json ]]; then
+    schema_file=".linter/csv-schema.json"
+elif [[ -f csv-schema.json ]]; then
+    schema_file="csv-schema.json"
+fi
+
+if [[ -n "$schema_file" ]]; then
+    echo "Running qsv validate (schema: ${schema_file})..."
+    if ! qsv validate --json "${csv_files[@]}" "$schema_file"; then
+        echo "FAIL: qsv validate"
         errors=$((errors + 1))
+    else
+        echo "PASS: qsv validate"
     fi
-done
+else
+    echo "Skipping qsv validate (no csv-schema.json found)."
+fi
 
 if [[ $errors -gt 0 ]]; then
-    echo "FAIL: csv syntax check"
+    echo ""
+    echo "CSV linting failed with $errors error(s)"
     exit 1
-else
-    echo "PASS: csv syntax check"
 fi

@@ -7,7 +7,7 @@
 | `lint-ansible`       | ansible-lint                                   | No        |
 | `lint-bash`          | shellcheck, shellharden                        | Yes       |
 | `lint-containerfile` | hadolint                                       | No        |
-| `lint-csv`           | python csv module                              | No        |
+| `lint-csv`           | csvclean, qsv validate                         | No        |
 | `lint-css`           | stylelint, biome                               | Yes       |
 | `lint-html`          | tidy                                           | No        |
 | `lint-javascript`    | eslint, biome                                  | Yes       |

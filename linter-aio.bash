@@ -402,9 +402,13 @@ run_container() {
     local command="$2"
     local full_image="${REGISTRY}/${image_name}:latest"
 
-    # fix needs read-write; lint is read-only
+    # fix needs read-write; lint is normally read-only
     local vol_opts="ro,z"
     if [[ "$command" == "/usr/local/bin/fix" ]]; then
+        vol_opts="z"
+    fi
+    # rust needs rw even for lint (cargo writes Cargo.lock)
+    if [[ "$image_name" == "lint-rust" ]]; then
         vol_opts="z"
     fi
 

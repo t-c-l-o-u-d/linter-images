@@ -10,7 +10,6 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: write
   contents: read
   packages: write
 
@@ -51,19 +50,3 @@ jobs:
       IMAGE_NAME: ${{ matrix.IMAGE_NAME }}
       IMAGE_DIR: ${{ matrix.IMAGE_DIR }}
     secrets: inherit
-
-  cleanup-cache:
-    name: Purge Vulnerability DB Caches
-    if: always()
-    needs: [build-base, build-linters]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete trivy and grype database caches
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh cache delete "trivy-db-${{ github.run_id }}" \
-            --repo "${{ github.repository }}" || true
-          gh cache delete "grype-db-${{ github.run_id }}" \
-            --repo "${{ github.repository }}" || true

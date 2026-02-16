@@ -55,7 +55,7 @@ jobs:
           buildah push \
           --format oci \
           ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest
-  scan-trivy:
+  scan:
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -70,15 +70,9 @@ jobs:
               --username "${{ github.actor }}" \
               --password-stdin \
               ghcr.io
-      - name: Restore trivy database cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/.cache/trivy
-          key: trivy-db-${{ github.run_id }}
       - name: Scan Container Image (trivy)
         uses: aquasecurity/trivy-action@0.34.0
         with:
-          cache-dir: ${{ github.workspace }}/.cache/trivy
           image-ref: 'ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest'
           format: 'table'
           exit-code: '1'
@@ -86,31 +80,10 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM'
           trivyignores: '.linter/.trivyignore'
-  scan-grype:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Authenticate to the registry
-        shell: bash
-        run: |
-          mkdir --parents "${HOME}/.docker"
-          echo "${{ secrets.GITHUB_TOKEN }}" \
-            | buildah login \
-              --authfile "${HOME}/.docker/config.json" \
-              --username "${{ github.actor }}" \
-              --password-stdin \
-              ghcr.io
-      - name: Restore grype database cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/.cache/grype
-          key: grype-db-${{ github.run_id }}
       - name: Scan Container Image (grype)
         uses: anchore/scan-action@v7.3.2
         env:
           GRYPE_CONFIG: .linter/.grype.yaml
-          GRYPE_DB_CACHE_DIR: ${{ github.workspace }}/.cache/grype
         with:
           image: 'ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest'
           output-format: 'table'
@@ -118,7 +91,7 @@ jobs:
           only-fixed: 'true'
           by-cve: 'true'
   prune:
-    needs: [scan-trivy, scan-grype]
+    needs: scan
     runs-on: ubuntu-latest
     steps:
       - name: Prune all but the most recent 3 images

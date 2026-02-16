@@ -18,7 +18,7 @@ errors=0
 echo "Running csvclean..."
 csvclean_fail=0
 for csv_file in "${csv_files[@]}"; do
-    if ! csvclean --enable-all-checks "${csv_file}" > /dev/null; then
+    if ! csvclean --enable-all-checks "$csv_file" > /dev/null; then
         csvclean_fail=1
     fi
 done

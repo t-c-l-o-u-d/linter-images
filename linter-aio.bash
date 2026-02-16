@@ -192,21 +192,24 @@ detect_images() {
             matched=1
         fi
 
-        # 2. filename prefix (e.g. Containerfile, Containerfile.alpine)
-        for entry in "${rule_prefix[@]}"; do
-            IFS='|' read -r img pattern <<< "$entry"
-            if [[ "$base" == "$pattern" || "$base" == "$pattern".* ]]; then
-                [[ "$img" != "skip" ]] && needed["$img"]=1
-                matched=1
-                break
-            fi
-        done
-
-        # 3. extension (O(1) lookup)
+        # 2. extension (O(1) lookup — checked before prefix so that
+        #    e.g. Containerfile.bu matches "skip|ext|bu" not "prefix|Containerfile")
         if [[ -n "$ext" && -n "${rule_ext[$ext]+x}" ]]; then
             img="${rule_ext[$ext]}"
             [[ "$img" != "skip" ]] && needed["$img"]=1
             matched=1
+        fi
+
+        # 3. filename prefix (e.g. Containerfile, Containerfile.alpine)
+        if [[ $matched -eq 0 ]]; then
+            for entry in "${rule_prefix[@]}"; do
+                IFS='|' read -r img pattern <<< "$entry"
+                if [[ "$base" == "$pattern" || "$base" == "$pattern".* ]]; then
+                    [[ "$img" != "skip" ]] && needed["$img"]=1
+                    matched=1
+                    break
+                fi
+            done
         fi
 
         # 4. shebang (only if unmatched — avoids reading every file)

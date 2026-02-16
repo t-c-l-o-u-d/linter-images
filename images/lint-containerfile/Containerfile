@@ -2,6 +2,8 @@
 
 FROM ghcr.io/t-c-l-o-u-d/linter-images/base-linter:latest
 
+USER root
+
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # install hadolint (static binary, not available in pacman)
@@ -17,6 +19,8 @@ RUN chmod +x /usr/local/bin/lint
 ENV LINTER_IMAGE=lint-containerfile
 
 WORKDIR /workspace
+
+USER 9001
 
 LABEL org.opencontainers.image.authors "https://github.com/t-c-l-o-u-d"
 LABEL org.opencontainers.image.description "Linter image for containerfiles: hadolint"

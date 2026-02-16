@@ -31,6 +31,13 @@ RUN pacman --sync --clean --clean --noconfirm
 # install shared header function
 COPY linter-header.bash /usr/local/lib/linter-header.bash
 
+# allow non-root user to run git in the mounted workspace
+RUN git config --system --add safe.directory /workspace
+
+# run as unprivileged user
+ENV HOME=/tmp
+USER 9001
+
 LABEL org.opencontainers.image.authors "https://github.com/t-c-l-o-u-d"
 LABEL org.opencontainers.image.description "Base linter image: Arch Linux with pacman setup"
 LABEL org.opencontainers.image.licenses "AGPL-3.0-or-later"

@@ -21,27 +21,36 @@ if [[ -f .linter/.stylelintrc.json ]]; then
     sl_args+=(--config .linter/.stylelintrc.json)
 elif [[ -f .stylelintrc.json ]]; then
     sl_args+=(--config .stylelintrc.json)
-fi
-if ! stylelint "${sl_args[@]}" "${css_files[@]}"; then
-    echo "FAIL: stylelint"
-    errors=$((errors + 1))
 else
-    echo "PASS: stylelint"
+    echo "SKIP: stylelint (no config found)"
+fi
+if [[ ${#sl_args[@]} -gt 0 ]]; then
+    if ! stylelint "${sl_args[@]}" "${css_files[@]}"; then
+        echo "FAIL: stylelint"
+        errors=$((errors + 1))
+    else
+        echo "PASS: stylelint"
+    fi
 fi
 
 echo ""
 echo "Running biome check..."
-biome_args=()
-if [[ -f .linter/biome.json ]]; then
-    biome_args+=(--config-path .linter)
-elif [[ -f biome.json ]]; then
-    biome_args+=(--config-path .)
-fi
-if ! biome check "${biome_args[@]}" "${css_files[@]}"; then
-    echo "FAIL: biome check"
-    errors=$((errors + 1))
+mapfile -t css_only < <(printf '%s\n' "${css_files[@]}" | grep --extended-regexp '\.css$')
+if [[ ${#css_only[@]} -eq 0 ]]; then
+    echo "SKIP: biome check (no .css files)"
 else
-    echo "PASS: biome check"
+    biome_args=()
+    if [[ -f .linter/biome.json ]]; then
+        biome_args+=(--config-path .linter)
+    elif [[ -f biome.json ]]; then
+        biome_args+=(--config-path .)
+    fi
+    if ! biome check "${biome_args[@]}" "${css_only[@]}"; then
+        echo "FAIL: biome check"
+        errors=$((errors + 1))
+    else
+        echo "PASS: biome check"
+    fi
 fi
 
 if [[ $errors -gt 0 ]]; then

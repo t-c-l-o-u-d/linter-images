@@ -19,16 +19,25 @@ if [[ -f .linter/.stylelintrc.json ]]; then
     sl_args+=(--config .linter/.stylelintrc.json)
 elif [[ -f .stylelintrc.json ]]; then
     sl_args+=(--config .stylelintrc.json)
+else
+    echo "SKIP: stylelint (no config found)"
 fi
-stylelint "${sl_args[@]}" "${css_files[@]}"
+if [[ ${#sl_args[@]} -gt 1 ]]; then
+    stylelint "${sl_args[@]}" "${css_files[@]}"
+fi
 
 echo "Running biome format --write..."
-biome_args=(--write)
-if [[ -f .linter/biome.json ]]; then
-    biome_args+=(--config-path .linter)
-elif [[ -f biome.json ]]; then
-    biome_args+=(--config-path .)
+mapfile -t css_only < <(printf '%s\n' "${css_files[@]}" | grep --extended-regexp '\.css$')
+if [[ ${#css_only[@]} -eq 0 ]]; then
+    echo "SKIP: biome format (no .css files)"
+else
+    biome_args=(--write)
+    if [[ -f .linter/biome.json ]]; then
+        biome_args+=(--config-path .linter)
+    elif [[ -f biome.json ]]; then
+        biome_args+=(--config-path .)
+    fi
+    biome format "${biome_args[@]}" "${css_only[@]}"
 fi
-biome format "${biome_args[@]}" "${css_files[@]}"
 
 echo "Done. Run lint to verify."

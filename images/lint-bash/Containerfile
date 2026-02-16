@@ -4,7 +4,6 @@ FROM ghcr.io/t-c-l-o-u-d/linter-images/base-linter:latest
 
 # install linter packages
 RUN pacman --sync --refresh --noconfirm \
-    bash \
     shellcheck \
     shellharden
 

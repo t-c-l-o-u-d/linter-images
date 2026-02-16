@@ -22,7 +22,8 @@ RUN pacman --sync --refresh --sysupgrade --noconfirm
 RUN pacman --sync --refresh --noconfirm \
     figlet \
     git \
-    diffutils
+    diffutils \
+    bash
 
 # clean up pacman cache
 RUN pacman --sync --clean --clean --noconfirm

@@ -635,6 +635,15 @@ EOF
             fi
         done
 
+        # sync fixes back when using a temp dir (separated gitdir)
+        if [[ "$MOUNT_DIR" != "$WORKTREE" ]]; then
+            git ls-files --full-name -z "$WORKTREE" | while IFS= read -r -d '' f; do
+                if ! cmp -s "$MOUNT_DIR/$f" "$WORKTREE/$f"; then
+                    cp -- "$MOUNT_DIR/$f" "$WORKTREE/$f"
+                fi
+            done
+        fi
+
         echo ""
         echo "==========================================="
         echo "  Fix Summary"

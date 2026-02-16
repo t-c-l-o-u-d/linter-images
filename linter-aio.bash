@@ -207,7 +207,7 @@ detect_images() {
     local -A scores=()
     local -A max_w=()
     local rule image match_type pattern entry
-    local f base ext img mime xdg_mime shebang interp desc context sample
+    local f fpath base ext img mime xdg_mime shebang interp desc context sample
     local env_arg rule_ctx rule_linter rule_pattern
     local winner best_score best_max_w linter score
     local has_mimetype=0
@@ -229,16 +229,17 @@ detect_images() {
     # project-level detection (dir and glob rules)
     for entry in "${pat_dir[@]}"; do
         IFS='|' read -r image pattern <<< "$entry"
-        [[ -d "$pattern" ]] && needed["$image"]=1
+        [[ -d "$WORKTREE/$pattern" ]] && needed["$image"]=1
     done
     for entry in "${pat_glob[@]}"; do
         IFS='|' read -r image pattern <<< "$entry"
-        git -c core.quotePath=false ls-files "$pattern" | grep --quiet . && needed["$image"]=1
+        git -c core.quotePath=false ls-files --full-name "$WORKTREE/$pattern" | grep --quiet . && needed["$image"]=1
     done
 
     # single-pass file walk with per-file consensus scoring
     while IFS= read -r f; do
-        [[ -f "$f" ]] || continue
+        fpath="$WORKTREE/$f"
+        [[ -f "$fpath" ]] || continue
         base="$(basename "$f")"
         ext=""
         [[ "$base" == *.* ]] && ext="${base##*.}"
@@ -249,7 +250,7 @@ detect_images() {
         max_w=()
 
         # --- MIME vote ---
-        mime="$(file --brief --mime-type "$f" 2>/dev/null)" || mime=""
+        mime="$(file --brief --mime-type "$fpath" 2>/dev/null)" || mime=""
 
         # skip binary, image, and inode types silently
         case "$mime" in
@@ -265,7 +266,7 @@ detect_images() {
 
         # --- XDG MIME vote (only when libmagic had no match) ---
         if [[ -z "${MIME_RULES[$mime]+x}" && $has_mimetype -eq 1 ]]; then
-            xdg_mime="$(mimetype --brief --magic-only "$f" 2>/dev/null)" || xdg_mime=""
+            xdg_mime="$(mimetype --brief --magic-only "$fpath" 2>/dev/null)" || xdg_mime=""
             if [[ -n "$xdg_mime" && -n "${MIME_RULES[$xdg_mime]+x}" ]]; then
                 img="${MIME_RULES[$xdg_mime]}"
                 scores["$img"]=$(( ${scores[$img]:-0} + W_MIME ))
@@ -274,7 +275,7 @@ detect_images() {
         fi
 
         # --- Shebang vote ---
-        shebang="$(head --lines=1 "$f" 2>/dev/null)" || shebang=""
+        shebang="$(head --lines=1 "$fpath" 2>/dev/null)" || shebang=""
         if [[ "$shebang" =~ ^#! ]]; then
             interp="${shebang##*[\\/]}"
             interp="${interp%% *}"
@@ -315,7 +316,7 @@ detect_images() {
             fi
         fi
         if [[ -n "$context" ]]; then
-            sample="$(head --lines=50 "$f" 2>/dev/null)" || sample=""
+            sample="$(head --lines=50 "$fpath" 2>/dev/null)" || sample=""
             for rule in "${CONTENT_RULES[@]}"; do
                 IFS='|' read -r rule_ctx rule_linter rule_pattern <<< "$rule"
                 if [[ "$rule_ctx" == "$context" ]]; then
@@ -382,7 +383,7 @@ detect_images() {
                 unsupported["${base} (${mime})"]=1
             fi
         fi
-    done < <(git -c core.quotePath=false ls-files)
+    done < <(git -c core.quotePath=false ls-files --full-name "$WORKTREE")
 
     # print unsupported warnings to stderr
     if [[ ${#unsupported[@]} -gt 0 ]]; then
@@ -420,7 +421,7 @@ run_container() {
     "$RUNTIME" run \
         --rm \
         --pull always \
-        --volume "$PWD":/workspace:"$vol_opts" \
+        --volume "$WORKTREE":/workspace:"$vol_opts" \
         "$full_image" \
         "$command"
 }
@@ -432,13 +433,9 @@ install_hook() {
         exit 1
     }
 
-    # resolve the worktree root (handles bare repos with external worktrees)
-    local workspace
-    workspace="$(git rev-parse --show-toplevel 2>/dev/null)" || {
-        echo "ERROR: Cannot resolve worktree for this repository." >&2
-        exit 1
-    }
-    cd "$workspace"
+    WORKTREE="$(git rev-parse --show-toplevel 2>/dev/null \
+        || git config core.worktree 2>/dev/null \
+        || echo "$PWD")"
 
     local hooks_dir="${git_dir}/hooks"
     local hook_path="${hooks_dir}/pre-commit"
@@ -554,12 +551,9 @@ main() {
         exit 1
     }
 
-    # resolve the worktree root (handles bare repos with external worktrees)
-    WORKSPACE="$(git rev-parse --show-toplevel 2>/dev/null)" || {
-        echo "ERROR: Cannot resolve worktree for this repository." >&2
-        exit 1
-    }
-    cd "$WORKSPACE"
+    WORKTREE="$(git rev-parse --show-toplevel 2>/dev/null \
+        || git config core.worktree 2>/dev/null \
+        || echo "$PWD")"
 
     RUNTIME="$(detect_runtime)"
 

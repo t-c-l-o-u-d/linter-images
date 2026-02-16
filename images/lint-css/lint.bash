@@ -6,10 +6,10 @@ set -euo pipefail
 source /usr/local/lib/linter-header.bash
 header
 
-mapfile -t css_files < <(git ls-files '*.css')
+mapfile -t css_files < <(git ls-files '*.css' '*.scss')
 
 if [[ ${#css_files[@]} -eq 0 ]]; then
-    echo "No CSS files found, skipping."
+    echo "No CSS/SCSS files found, skipping."
     exit 0
 fi
 

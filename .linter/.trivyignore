@@ -8,9 +8,6 @@ CVE-2025-61729
 CVE-2025-61730
 CVE-2025-68121
 
-# lint-ansible: cryptography — upstream Arch package
-CVE-2026-26007
-
 # lint-css: js-yaml — upstream Arch package
 CVE-2025-64718
 

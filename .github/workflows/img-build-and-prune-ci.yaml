@@ -70,9 +70,15 @@ jobs:
               --username "${{ github.actor }}" \
               --password-stdin \
               ghcr.io
+      - name: Restore trivy database cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.cache/trivy
+          key: trivy-db-${{ github.run_id }}
       - name: Scan Container Image (trivy)
         uses: aquasecurity/trivy-action@0.34.0
         with:
+          cache-dir: ${{ github.workspace }}/.cache/trivy
           image-ref: 'ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest'
           format: 'table'
           exit-code: '1'
@@ -95,10 +101,16 @@ jobs:
               --username "${{ github.actor }}" \
               --password-stdin \
               ghcr.io
+      - name: Restore grype database cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.cache/grype
+          key: grype-db-${{ github.run_id }}
       - name: Scan Container Image (grype)
         uses: anchore/scan-action@v7.3.2
         env:
           GRYPE_CONFIG: .linter/.grype.yaml
+          GRYPE_DB_CACHE_DIR: ${{ github.workspace }}/.cache/grype
         with:
           image: 'ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest'
           output-format: 'table'

@@ -579,7 +579,7 @@ main() {
     # dotfiles repo with core.worktree=$HOME), mounting the full worktree
     # is unsafe — it may be $HOME.  Stage only tracked files into a temp dir.
     MOUNT_DIR="$WORKTREE"
-    if [[ "${GIT_ABS_DIR}" != "${WORKTREE}/.git" ]]; then
+    if [[ "$GIT_ABS_DIR" != "${WORKTREE}/.git" ]]; then
         MOUNT_DIR="$(mktemp -d)"
         trap 'rm -rf "$MOUNT_DIR"' EXIT
         git ls-files --full-name -z | while IFS= read -r -d '' f; do

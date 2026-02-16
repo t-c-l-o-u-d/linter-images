@@ -14,15 +14,101 @@ declare -A FIX_SUPPORTED=(
 )
 
 # extensions we have linters for
-SUPPORTED_EXT_RE="^(py|rs|css|scss|html|js|mjs|cjs|json|yml|yaml|vim|service|timer|socket|path|mount|target|slice|md)$"
+SUPPORTED_EXTS=(
+    cjs
+    csv
+    css
+    html
+    js
+    json
+    md
+    mjs
+    mount
+    path
+    py
+    rs
+    scss
+    service
+    slice
+    socket
+    target
+    timer
+    vim
+    yaml
+    yml
+)
+
 # mimetypes we have linters for (bash is detected via shebang + mimetype)
-SUPPORTED_MIME_RE="^text/x-shellscript$"
+SUPPORTED_MIMES=(
+    text/x-shellscript
+)
+
 # non-code files to silently skip
-SKIP_EXT_RE="^(txt|lock|toml|cfg|ini|conf|gitignore|gitattributes|editorconfig|trivyignore|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$"
+SKIP_EXTS=(
+    cfg
+    conf
+    editorconfig
+    eot
+    gif
+    gitattributes
+    gitignore
+    ico
+    ini
+    jpg
+    jpeg
+    lock
+    png
+    svg
+    toml
+    trivyignore
+    ttf
+    txt
+    woff
+    woff2
+)
+
 # known filenames we handle
-SUPPORTED_NAMES_RE="^(Cargo\.toml|Containerfile(\..*)?|Dockerfile(\..*)?|vimrc|ansible\.cfg|site\.yml|site\.yaml)$"
+SUPPORTED_NAMES=(
+    Cargo.toml
+    ansible.cfg
+    site.yaml
+    site.yml
+    vimrc
+)
+
+# basenames that match with or without a .suffix (e.g. Containerfile.alpine)
+SUPPORTED_NAME_PREFIXES=(
+    Containerfile
+    Dockerfile
+)
+
 # non-code filenames to silently skip
-SKIP_NAMES_RE="^(COPYING|LICENSE|LICENCE|AUTHORS|CHANGELOG|Makefile)$"
+SKIP_NAMES=(
+    AUTHORS
+    CHANGELOG
+    COPYING
+    LICENCE
+    LICENSE
+    Makefile
+)
+
+has_match() {
+    local needle="$1"
+    shift
+    for item in "$@"; do
+        [[ "$needle" == "$item" ]] && return 0
+    done
+    return 1
+}
+
+is_supported_name() {
+    local name="$1"
+    has_match "$name" "${SUPPORTED_NAMES[@]}" && return 0
+    for prefix in "${SUPPORTED_NAME_PREFIXES[@]}"; do
+        [[ "$name" == "$prefix" || "$name" == "$prefix".* ]] && return 0
+    done
+    return 1
+}
 
 detect_runtime() {
     if command -v podman > /dev/null 2>&1; then
@@ -61,6 +147,11 @@ detect_images() {
     done)
     if [[ "$bash_found" -eq 1 ]]; then
         needed[lint-bash]=1
+    fi
+
+    # csv
+    if git ls-files '*.csv' | grep --quiet .; then
+        needed[lint-csv]=1
     fi
 
     # css
@@ -128,12 +219,12 @@ detect_unsupported() {
         base="$(basename "$f")"
 
         # skip known supported filenames
-        if [[ "$base" =~ ${SUPPORTED_NAMES_RE} ]]; then
+        if is_supported_name "$base"; then
             continue
         fi
 
         # skip known non-code filenames
-        if [[ "$base" =~ ${SKIP_NAMES_RE} ]]; then
+        if has_match "$base" "${SKIP_NAMES[@]}"; then
             continue
         fi
 
@@ -144,12 +235,12 @@ detect_unsupported() {
         fi
 
         # skip if extension is supported
-        if [[ -n "$ext" ]] && [[ "$ext" =~ ${SUPPORTED_EXT_RE} ]]; then
+        if [[ -n "$ext" ]] && has_match "$ext" "${SUPPORTED_EXTS[@]}"; then
             continue
         fi
 
         # skip known non-code extensions
-        if [[ -n "$ext" ]] && [[ "$ext" =~ ${SKIP_EXT_RE} ]]; then
+        if [[ -n "$ext" ]] && has_match "$ext" "${SKIP_EXTS[@]}"; then
             continue
         fi
 
@@ -158,7 +249,7 @@ detect_unsupported() {
         mime="$(file --brief --mime-type "$f" 2>/dev/null)" || continue
 
         # skip if mimetype is supported (e.g. extensionless shell scripts)
-        if [[ "$mime" =~ ${SUPPORTED_MIME_RE} ]]; then
+        if has_match "$mime" "${SUPPORTED_MIMES[@]}"; then
             continue
         fi
 

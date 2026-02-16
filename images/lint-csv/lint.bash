@@ -16,7 +16,13 @@ fi
 errors=0
 
 echo "Running csvclean..."
-if ! csvclean --dry-run "${csv_files[@]}"; then
+csvclean_fail=0
+for csv_file in "${csv_files[@]}"; do
+    if ! csvclean --enable-all-checks "${csv_file}" > /dev/null; then
+        csvclean_fail=1
+    fi
+done
+if [[ ${csvclean_fail} -ne 0 ]]; then
     echo "FAIL: csvclean"
     errors=$((errors + 1))
 else

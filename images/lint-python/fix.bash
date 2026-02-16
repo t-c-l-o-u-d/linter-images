@@ -20,9 +20,15 @@ if [[ -f .linter/ruff.toml ]]; then
 elif [[ -f ruff.toml ]]; then
     ruff_args+=(--config ruff.toml)
 fi
-ruff check --fix "${ruff_args[@]}" "${py_files[@]}"
+for f in "${py_files[@]}"; do
+    printf "  %s\n" "$f"
+    ruff check --fix "${ruff_args[@]}" "$f"
+done
 
 echo "Running ruff format..."
-ruff format "${ruff_args[@]}" "${py_files[@]}"
+for f in "${py_files[@]}"; do
+    printf "  %s\n" "$f"
+    ruff format "${ruff_args[@]}" "$f"
+done
 
 echo "Done. Run lint to verify."

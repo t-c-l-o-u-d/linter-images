@@ -20,7 +20,10 @@ if [[ -f .linter/eslint.config.js ]]; then
 elif [[ -f eslint.config.js ]]; then
     es_args+=(--config eslint.config.js)
 fi
-eslint "${es_args[@]}" "${js_files[@]}"
+for f in "${js_files[@]}"; do
+    printf "  %s\n" "$f"
+    eslint "${es_args[@]}" "$f"
+done
 
 echo "Running biome format --write..."
 biome_args=(--write)
@@ -29,6 +32,9 @@ if [[ -f .linter/biome.json ]]; then
 elif [[ -f biome.json ]]; then
     biome_args+=(--config-path .)
 fi
-biome format "${biome_args[@]}" "${js_files[@]}"
+for f in "${js_files[@]}"; do
+    printf "  %s\n" "$f"
+    biome format "${biome_args[@]}" "$f"
+done
 
 echo "Done. Run lint to verify."

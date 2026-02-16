@@ -14,7 +14,7 @@ if [[ ${#json_files[@]} -eq 0 ]]; then
 fi
 
 echo "Running json syntax check..."
-errors=0
+tool_errors=0
 for f in "${json_files[@]}"; do
     if ! output=$(python3 -c "
 import json, re, sys
@@ -25,14 +25,17 @@ text = re.sub(r'//.*$', '', text, flags=re.MULTILINE)
 text = re.sub(r'/\*.*?\*/', '', text, flags=re.DOTALL)
 json.loads(text)
 " "$f" 2>&1); then
-        echo "  ${f}: ${output}"
-        errors=$((errors + 1))
+        printf "  FAIL: %s\n" "$f"
+        printf "    %s\n" "$output"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
     fi
 done
 
-if [[ $errors -gt 0 ]]; then
-    echo "FAIL: json syntax check"
+if ((tool_errors > 0)); then
+    printf "FAIL: json syntax check (%d file(s))\n" "$tool_errors"
     exit 1
 else
-    echo "PASS: json syntax check"
+    printf "PASS: json syntax check\n"
 fi

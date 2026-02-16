@@ -22,20 +22,38 @@ if [[ -f .linter/ruff.toml ]]; then
 elif [[ -f ruff.toml ]]; then
     ruff_args+=(--config ruff.toml)
 fi
-if ! ruff check "${ruff_args[@]}" "${py_files[@]}"; then
-    echo "FAIL: ruff check"
+tool_errors=0
+for f in "${py_files[@]}"; do
+    if ! ruff check "${ruff_args[@]}" "$f"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: ruff check (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: ruff check"
+    printf "PASS: ruff check\n"
 fi
 
 echo ""
 echo "Running ruff format --check..."
-if ! ruff format --check "${ruff_args[@]}" "${py_files[@]}"; then
-    echo "FAIL: ruff format"
+tool_errors=0
+for f in "${py_files[@]}"; do
+    if ! ruff format --check "${ruff_args[@]}" "$f"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: ruff format (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: ruff format"
+    printf "PASS: ruff format\n"
 fi
 
 echo ""
@@ -46,26 +64,39 @@ if [[ -f .linter/mypy.ini ]]; then
 elif [[ -f mypy.ini ]]; then
     mypy_args+=(--config-file mypy.ini)
 fi
+printf "  Files:\n"
+for f in "${py_files[@]}"; do
+    printf "    %s\n" "$f"
+done
 if ! mypy "${mypy_args[@]}" "${py_files[@]}"; then
-    echo "FAIL: mypy"
+    printf "FAIL: mypy\n"
     errors=$((errors + 1))
 else
-    echo "PASS: mypy"
+    printf "PASS: mypy\n"
 fi
 
 echo ""
 echo "Running bandit..."
-bandit_args=(--recursive --quiet)
+bandit_args=(--quiet)
 if [[ -f .linter/.bandit ]]; then
     bandit_args+=(--configfile .linter/.bandit)
 elif [[ -f .bandit ]]; then
     bandit_args+=(--configfile .bandit)
 fi
-if ! bandit "${bandit_args[@]}" "${py_files[@]}"; then
-    echo "FAIL: bandit"
+tool_errors=0
+for f in "${py_files[@]}"; do
+    if ! bandit "${bandit_args[@]}" "$f"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: bandit (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: bandit"
+    printf "PASS: bandit\n"
 fi
 
 if [[ $errors -gt 0 ]]; then

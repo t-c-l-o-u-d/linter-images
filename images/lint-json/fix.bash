@@ -15,6 +15,7 @@ fi
 
 echo "Running jq format..."
 for f in "${json_files[@]}"; do
+    printf "  %s\n" "$f"
     tmp="${f}.tmp"
     jq . "$f" > "$tmp"
     mv "$tmp" "$f"

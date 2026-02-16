@@ -11,6 +11,14 @@ if [[ ! -f Cargo.toml ]]; then
     exit 0
 fi
 
+# List project files being fixed
+mapfile -t rs_files < <(git ls-files '*.rs' 'Cargo.toml')
+printf "Files:\n"
+for f in "${rs_files[@]}"; do
+    printf "  %s\n" "$f"
+done
+echo ""
+
 echo "Running cargo clippy --fix..."
 cargo clippy \
     --fix \

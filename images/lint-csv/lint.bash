@@ -16,17 +16,20 @@ fi
 errors=0
 
 echo "Running csvclean..."
-csvclean_fail=0
+tool_errors=0
 for csv_file in "${csv_files[@]}"; do
     if ! csvclean --enable-all-checks "$csv_file" > /dev/null; then
-        csvclean_fail=1
+        printf "  FAIL: %s\n" "$csv_file"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$csv_file"
     fi
 done
-if [[ ${csvclean_fail} -ne 0 ]]; then
-    echo "FAIL: csvclean"
+if ((tool_errors > 0)); then
+    printf "FAIL: csvclean (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: csvclean"
+    printf "PASS: csvclean\n"
 fi
 
 schema_file=""
@@ -38,11 +41,20 @@ fi
 
 if [[ -n "$schema_file" ]]; then
     echo "Running qsv validate (schema: ${schema_file})..."
-    if ! qsv validate --json "${csv_files[@]}" "$schema_file"; then
-        echo "FAIL: qsv validate"
+    tool_errors=0
+    for f in "${csv_files[@]}"; do
+        if ! qsv validate --json "$f" "$schema_file"; then
+            printf "  FAIL: %s\n" "$f"
+            tool_errors=$((tool_errors + 1))
+        else
+            printf "  PASS: %s\n" "$f"
+        fi
+    done
+    if ((tool_errors > 0)); then
+        printf "FAIL: qsv validate (%d file(s))\n" "$tool_errors"
         errors=$((errors + 1))
     else
-        echo "PASS: qsv validate"
+        printf "PASS: qsv validate\n"
     fi
 else
     echo "Skipping qsv validate (no csv-schema.json found)."

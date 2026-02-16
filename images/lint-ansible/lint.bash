@@ -20,6 +20,14 @@ if [[ -n "$req_file" ]]; then
     ansible-galaxy collection install --requirements-file "$req_file"
 fi
 
+# List files being checked
+mapfile -t ansible_files < <(git ls-files '*.yml' '*.yaml')
+printf "Files:\n"
+for f in "${ansible_files[@]}"; do
+    printf "  %s\n" "$f"
+done
+echo ""
+
 errors=0
 
 echo "Running ansible-lint..."

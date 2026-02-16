@@ -22,11 +22,20 @@ if [[ -f .linter/eslint.config.js ]]; then
 elif [[ -f eslint.config.js ]]; then
     es_args+=(--config eslint.config.js)
 fi
-if ! eslint "${es_args[@]}" "${js_files[@]}"; then
-    echo "FAIL: eslint"
+tool_errors=0
+for f in "${js_files[@]}"; do
+    if ! eslint "${es_args[@]}" "$f"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: eslint (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: eslint"
+    printf "PASS: eslint\n"
 fi
 
 echo ""
@@ -37,11 +46,20 @@ if [[ -f .linter/biome.json ]]; then
 elif [[ -f biome.json ]]; then
     biome_args+=(--config-path .)
 fi
-if ! biome check "${biome_args[@]}" "${js_files[@]}"; then
-    echo "FAIL: biome check"
+tool_errors=0
+for f in "${js_files[@]}"; do
+    if ! biome check "${biome_args[@]}" "$f"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: biome check (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: biome check"
+    printf "PASS: biome check\n"
 fi
 
 if [[ $errors -gt 0 ]]; then

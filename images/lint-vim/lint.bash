@@ -23,18 +23,22 @@ if [[ -f .linter/.vintrc.yaml ]] && [[ ! -f .vintrc.yaml ]]; then
     cp .linter/.vintrc.yaml "${vint_dir}/.vintrc.yaml"
 fi
 
-# absolute paths so vint works from any cwd
-vint_files=()
-for f in "${vim_files[@]}"; do
-    vint_files+=("/workspace/${f}")
-done
-
 echo "Running vint..."
-if ! (cd "$vint_dir" && vint "${vint_files[@]}"); then
-    echo "FAIL: vint"
+tool_errors=0
+for f in "${vim_files[@]}"; do
+    abs_f="/workspace/${f}"
+    if ! (cd "$vint_dir" && vint "$abs_f"); then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: vint (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: vint"
+    printf "PASS: vint\n"
 fi
 
 if [[ $errors -gt 0 ]]; then

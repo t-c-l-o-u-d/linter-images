@@ -20,18 +20,20 @@ if [[ -f .linter/.tidyrc ]]; then
 elif [[ -f .tidyrc ]]; then
     tidy_args+=(-config .tidyrc)
 fi
-errors=0
+tool_errors=0
 for f in "${html_files[@]}"; do
     if ! output=$(tidy "${tidy_args[@]}" "$f" 2>&1 > /dev/null); then
-        echo "  ${f}:"
-        echo "    ${output//$'\n'/$'\n'    }"
-        errors=$((errors + 1))
+        printf "  FAIL: %s\n" "$f"
+        printf "    %s\n" "${output//$'\n'/$'\n'    }"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
     fi
 done
 
-if [[ $errors -gt 0 ]]; then
-    echo "FAIL: tidy found issues in $errors file(s)"
+if ((tool_errors > 0)); then
+    printf "FAIL: tidy (%d file(s))\n" "$tool_errors"
     exit 1
 else
-    echo "PASS: tidy syntax check"
+    printf "PASS: tidy\n"
 fi

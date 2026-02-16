@@ -25,7 +25,10 @@ else
     sl_args+=(--config-basedir /usr/lib/node_modules)
     sl_args+=(--config "$sl_default_config")
 fi
-stylelint "${sl_args[@]}" "${css_files[@]}"
+for f in "${css_files[@]}"; do
+    printf "  %s\n" "$f"
+    stylelint "${sl_args[@]}" "$f"
+done
 
 echo "Running biome format --write..."
 mapfile -t css_only < <(printf '%s\n' "${css_files[@]}" | grep --extended-regexp '\.css$')
@@ -38,7 +41,10 @@ else
     elif [[ -f biome.json ]]; then
         biome_args+=(--config-path .)
     fi
-    biome format "${biome_args[@]}" "${css_only[@]}"
+    for f in "${css_only[@]}"; do
+        printf "  %s\n" "$f"
+        biome format "${biome_args[@]}" "$f"
+    done
 fi
 
 echo "Done. Run lint to verify."

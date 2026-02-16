@@ -27,11 +27,20 @@ else
     sl_args+=(--config-basedir /usr/lib/node_modules)
     sl_args+=(--config "$sl_default_config")
 fi
-if ! stylelint "${sl_args[@]}" "${css_files[@]}"; then
-    echo "FAIL: stylelint"
+tool_errors=0
+for f in "${css_files[@]}"; do
+    if ! stylelint "${sl_args[@]}" "$f"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: stylelint (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: stylelint"
+    printf "PASS: stylelint\n"
 fi
 
 echo ""
@@ -46,11 +55,20 @@ else
     elif [[ -f biome.json ]]; then
         biome_args+=(--config-path .)
     fi
-    if ! biome check "${biome_args[@]}" "${css_only[@]}"; then
-        echo "FAIL: biome check"
+    tool_errors=0
+    for f in "${css_only[@]}"; do
+        if ! biome check "${biome_args[@]}" "$f"; then
+            printf "  FAIL: %s\n" "$f"
+            tool_errors=$((tool_errors + 1))
+        else
+            printf "  PASS: %s\n" "$f"
+        fi
+    done
+    if ((tool_errors > 0)); then
+        printf "FAIL: biome check (%d file(s))\n" "$tool_errors"
         errors=$((errors + 1))
     else
-        echo "PASS: biome check"
+        printf "PASS: biome check\n"
     fi
 fi
 

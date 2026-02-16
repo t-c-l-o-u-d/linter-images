@@ -22,11 +22,20 @@ if [[ -f .linter/.markdownlint-cli2.yaml ]]; then
 elif [[ -f .markdownlint-cli2.yaml ]]; then
     mdl_args+=(--config .markdownlint-cli2.yaml)
 fi
-if ! markdownlint-cli2 "${mdl_args[@]}" "${md_files[@]}"; then
-    echo "FAIL: markdownlint-cli2"
+tool_errors=0
+for f in "${md_files[@]}"; do
+    if ! markdownlint-cli2 "${mdl_args[@]}" "$f"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: markdownlint-cli2 (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: markdownlint-cli2"
+    printf "PASS: markdownlint-cli2\n"
 fi
 
 if [[ $errors -gt 0 ]]; then

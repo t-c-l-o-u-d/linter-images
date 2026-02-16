@@ -16,11 +16,20 @@ fi
 errors=0
 
 echo "Running systemd-analyze verify..."
-if ! systemd-analyze verify "${systemd_units[@]}"; then
-    echo "FAIL: systemd-analyze verify"
+tool_errors=0
+for f in "${systemd_units[@]}"; do
+    if ! systemd-analyze verify "$f"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: systemd-analyze verify (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: systemd-analyze verify"
+    printf "PASS: systemd-analyze verify\n"
 fi
 
 if [[ $errors -gt 0 ]]; then

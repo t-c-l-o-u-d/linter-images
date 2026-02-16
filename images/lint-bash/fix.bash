@@ -22,6 +22,9 @@ if [[ ${#bash_scripts[@]} -eq 0 ]]; then
 fi
 
 echo "Running shellharden --replace..."
-shellharden --replace "${bash_scripts[@]}"
+for f in "${bash_scripts[@]}"; do
+    printf "  %s\n" "$f"
+    shellharden --replace "$f"
+done
 
 echo "Done. Run lint to verify."

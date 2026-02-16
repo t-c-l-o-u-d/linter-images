@@ -20,6 +20,9 @@ if [[ -f .linter/.yamlfmt ]]; then
 elif [[ -f .yamlfmt ]]; then
     yamlfmt_args+=(-conf .yamlfmt)
 fi
-yamlfmt "${yamlfmt_args[@]}" "${yaml_files[@]}"
+for f in "${yaml_files[@]}"; do
+    printf "  %s\n" "$f"
+    yamlfmt "${yamlfmt_args[@]}" "$f"
+done
 
 echo "Done. Run lint to verify."

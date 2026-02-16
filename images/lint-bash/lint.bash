@@ -24,11 +24,20 @@ fi
 errors=0
 
 echo "Running bash -n (syntax check)..."
-if ! bash -n "${bash_scripts[@]}"; then
-    echo "FAIL: bash syntax check"
+tool_errors=0
+for f in "${bash_scripts[@]}"; do
+    if ! bash -n "$f"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: bash syntax check (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: bash syntax check"
+    printf "PASS: bash syntax check\n"
 fi
 
 echo ""
@@ -39,23 +48,39 @@ if [[ -f .linter/.shellcheckrc ]]; then
 elif [[ -f .shellcheckrc ]]; then
     sc_args+=(--rcfile .shellcheckrc)
 fi
-if ! shellcheck "${sc_args[@]}" "${bash_scripts[@]}"; then
-    echo "FAIL: shellcheck"
+tool_errors=0
+for f in "${bash_scripts[@]}"; do
+    if ! shellcheck "${sc_args[@]}" "$f"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: shellcheck (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: shellcheck"
+    printf "PASS: shellcheck\n"
 fi
 
 echo ""
 echo "Running shellharden..."
-if ! shellharden --check "${bash_scripts[@]}"; then
-    for f in "${bash_scripts[@]}"; do
-        diff --unified "$f" <(shellharden "$f") || true
-    done
-    echo "FAIL: shellharden"
+tool_errors=0
+for f in "${bash_scripts[@]}"; do
+    if ! shellharden --check "$f"; then
+        diff --unified "$f" <(shellharden --transform "$f") || true
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: shellharden (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: shellharden"
+    printf "PASS: shellharden\n"
 fi
 
 if [[ $errors -gt 0 ]]; then

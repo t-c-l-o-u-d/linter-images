@@ -24,11 +24,20 @@ if [[ -f .linter/.hadolint.yaml ]]; then
 elif [[ -f .hadolint.yaml ]]; then
     hadolint_args+=(--config .hadolint.yaml)
 fi
-if ! hadolint "${hadolint_args[@]}" "${containerfiles[@]}"; then
-    echo "FAIL: hadolint"
+tool_errors=0
+for f in "${containerfiles[@]}"; do
+    if ! hadolint "${hadolint_args[@]}" "$f"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: hadolint (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: hadolint"
+    printf "PASS: hadolint\n"
 fi
 
 if [[ $errors -gt 0 ]]; then

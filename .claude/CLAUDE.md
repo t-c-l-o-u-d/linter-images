@@ -58,6 +58,15 @@ ghcr.io via GitHub Actions.
 - Use `git ls-files` or `grep -rl` for file discovery
 - Accumulate errors and report PASS/FAIL per tool
 - Every script prints the ASCII banner on startup
+- **Per-file reporting (required):** lint scripts must
+  run each tool per-file and print `PASS: <path>` or
+  `FAIL: <path>` for every file, then a tool-level
+  summary (`PASS: toolname` or
+  `FAIL: toolname (N file(s))`). Fix scripts must
+  print each file path before processing it.
+  Project-level tools (cargo, ansible-lint, mypy)
+  that cannot run per-file must list all files before
+  the tool runs.
 
 ### Packages
 

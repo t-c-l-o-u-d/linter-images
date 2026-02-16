@@ -11,6 +11,14 @@ if [[ ! -f Cargo.toml ]]; then
     exit 0
 fi
 
+# List project files being checked
+mapfile -t rs_files < <(git ls-files '*.rs' 'Cargo.toml' 'Cargo.lock')
+printf "Files:\n"
+for f in "${rs_files[@]}"; do
+    printf "  %s\n" "$f"
+done
+echo ""
+
 errors=0
 
 echo "Checking dependency tree for duplicates..."

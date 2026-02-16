@@ -22,11 +22,20 @@ if [[ -f .linter/.yamllint.yaml ]]; then
 elif [[ -f .yamllint.yaml ]]; then
     yamllint_args+=(--config-file .yamllint.yaml)
 fi
-if ! yamllint "${yamllint_args[@]}" "${yaml_files[@]}"; then
-    echo "FAIL: yamllint"
+tool_errors=0
+for f in "${yaml_files[@]}"; do
+    if ! yamllint "${yamllint_args[@]}" "$f"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: yamllint (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: yamllint"
+    printf "PASS: yamllint\n"
 fi
 
 if [[ $errors -gt 0 ]]; then

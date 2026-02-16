@@ -15,17 +15,19 @@ declare -A FIX_SUPPORTED=(
     [lint-yaml]=1
 )
 
-# --- Supersession rules ---
-# When a domain-specific linter is detected, it supersedes the generic
-# format linter.  e.g. ansible-lint runs yamllint internally, so
-# running lint-yaml separately is redundant and may conflict.
-declare -A SUPERSEDES=(
-    [lint-ansible]=lint-yaml
-)
+# --- Consensus scoring weights ---
+# Every detection method votes for a linter. Highest total score wins.
+# Content-based methods (MIME, shebang, heuristics) at weight 3;
+# name-based methods (extension, filename, prefix) at weight 1.
+readonly W_CONTENT=3
+readonly W_MIME=3
+readonly W_SHEBANG=3
+readonly W_EXT=1
+readonly W_FILE=1
+readonly W_PREFIX=1
 
-# --- MIME-based detection (content is truth) ---
-# Maps MIME types to linter images. Checked FIRST so that file content
-# always wins over filename patterns.
+# --- MIME type → linter mapping ---
+# Both file (libmagic) and mimetype (XDG MIME) results are looked up here.
 declare -A MIME_RULES=(
     # file --brief --mime-type detects these from content:
     [application/json]=lint-json
@@ -44,17 +46,16 @@ declare -A MIME_RULES=(
     [application/xml]=skip
 )
 
-# --- Shebang-based detection ---
-# Maps shebang interpreters to linter images. Checked SECOND, after MIME.
+# --- Shebang interpreter → linter mapping ---
 declare -A SHEBANG_RULES=(
     [bash]=lint-bash
     [python]=lint-python
     [python3]=lint-python
 )
 
-# --- Pattern-based detection (LAST RESORT for text/plain files) ---
-# Only consulted when MIME detection and shebang detection both fail.
-# match types: ext, file, prefix, dir, glob
+# --- Pattern rules (name-based detection) ---
+# Extension, filename, and prefix patterns. Each contributes W_EXT,
+# W_FILE, or W_PREFIX. match types: ext, file, prefix, dir, glob
 PATTERN_RULES=(
     # ansible (project-level markers)
     "lint-ansible|dir|roles"
@@ -167,6 +168,21 @@ PATTERN_RULES=(
     "skip|file|Makefile"
 )
 
+# --- Content heuristic rules ---
+# Domain-specific patterns searched in file content. Only run when the
+# file's MIME context matches (yaml or plain). Each match adds W_CONTENT.
+# Format: "context|linter|extended-regex-pattern"
+CONTENT_RULES=(
+    # ansible heuristics (context: yaml)
+    "yaml|lint-ansible|^[[:space:]]*-?[[:space:]]*become[[:space:]]*:"
+    "yaml|lint-ansible|^[[:space:]]*-?[[:space:]]*gather_facts[[:space:]]*:"
+    "yaml|lint-ansible|^[[:space:]]*-?[[:space:]]*tasks[[:space:]]*:"
+    "yaml|lint-ansible|^[[:space:]]*-?[[:space:]]*handlers[[:space:]]*:"
+    # containerfile heuristics (context: plain)
+    "plain|lint-containerfile|^FROM[[:space:]]+[^[:space:]]"
+    "plain|lint-containerfile|^(RUN|COPY|ADD|CMD|ENTRYPOINT|EXPOSE|WORKDIR|ENV|ARG|LABEL)[[:space:]]"
+)
+
 detect_runtime() {
     if command -v podman > /dev/null 2>&1; then
         echo "podman"
@@ -188,8 +204,12 @@ detect_images() {
     local -a pat_glob=()
     local -A needed=()
     local -A unsupported=()
+    local -A scores=()
+    local -A max_w=()
     local rule image match_type pattern entry
-    local f base ext matched img mime xdg_mime shebang interp desc
+    local f base ext img mime xdg_mime shebang interp desc context sample
+    local env_arg rule_ctx rule_linter rule_pattern
+    local winner best_score best_max_w linter score
     local has_mimetype=0
 
     # check if mimetype (perl-file-mimeinfo) is available
@@ -216,15 +236,19 @@ detect_images() {
         git -c core.quotePath=false ls-files "$pattern" | grep --quiet . && needed["$image"]=1
     done
 
-    # single-pass file walk
+    # single-pass file walk with per-file consensus scoring
     while IFS= read -r f; do
         [[ -f "$f" ]] || continue
         base="$(basename "$f")"
         ext=""
         [[ "$base" == *.* ]] && ext="${base##*.}"
-        matched=0
+        xdg_mime=""
 
-        # --- STEP 1: MIME detection (content-based, always runs) ---
+        # reset per-file accumulators
+        scores=()
+        max_w=()
+
+        # --- MIME vote ---
         mime="$(file --brief --mime-type "$f" 2>/dev/null)" || mime=""
 
         # skip binary, image, and inode types silently
@@ -233,71 +257,125 @@ detect_images() {
             inode/*|image/*|audio/*|video/*) continue ;;
         esac
 
-        # check file's MIME against content rules
         if [[ -n "$mime" && -n "${MIME_RULES[$mime]+x}" ]]; then
             img="${MIME_RULES[$mime]}"
-            [[ "$img" != "skip" ]] && needed["$img"]=1
-            matched=1
+            scores["$img"]=$(( ${scores[$img]:-0} + W_MIME ))
+            [[ $W_MIME -gt ${max_w[$img]:-0} ]] && max_w["$img"]=$W_MIME
         fi
 
-        # try mimetype --magic-only for additional content detection
-        if [[ $matched -eq 0 && $has_mimetype -eq 1 ]]; then
+        # --- XDG MIME vote (only when libmagic had no match) ---
+        if [[ -z "${MIME_RULES[$mime]+x}" && $has_mimetype -eq 1 ]]; then
             xdg_mime="$(mimetype --brief --magic-only "$f" 2>/dev/null)" || xdg_mime=""
             if [[ -n "$xdg_mime" && -n "${MIME_RULES[$xdg_mime]+x}" ]]; then
                 img="${MIME_RULES[$xdg_mime]}"
-                [[ "$img" != "skip" ]] && needed["$img"]=1
-                matched=1
+                scores["$img"]=$(( ${scores[$img]:-0} + W_MIME ))
+                [[ $W_MIME -gt ${max_w[$img]:-0} ]] && max_w["$img"]=$W_MIME
             fi
         fi
 
-        # --- STEP 2: shebang detection ---
-        if [[ $matched -eq 0 ]]; then
-            shebang="$(head --lines=1 --bytes=256 "$f" 2>/dev/null)" || shebang=""
-            if [[ "$shebang" =~ ^#! ]]; then
-                # extract interpreter name (e.g. /usr/bin/env bash → bash)
-                interp="${shebang##*[\\/]}"
-                interp="${interp%% *}"
-                if [[ -n "${SHEBANG_RULES[$interp]+x}" ]]; then
-                    needed["${SHEBANG_RULES[$interp]}"]=1
-                    matched=1
-                else
-                    unsupported["${base} (${interp})"]=1
-                    matched=1
-                fi
-            fi
-        fi
-
-        # --- STEP 3: pattern fallback (LAST RESORT for text/plain) ---
-        if [[ $matched -eq 0 ]]; then
-            # 3a. exact filename
-            if [[ -n "${pat_file[$base]+x}" ]]; then
-                img="${pat_file[$base]}"
-                [[ "$img" != "skip" ]] && needed["$img"]=1
-                matched=1
-            fi
-
-            # 3b. extension
-            if [[ $matched -eq 0 && -n "$ext" && -n "${pat_ext[$ext]+x}" ]]; then
-                img="${pat_ext[$ext]}"
-                [[ "$img" != "skip" ]] && needed["$img"]=1
-                matched=1
-            fi
-
-            # 3c. filename prefix (e.g. Containerfile, Containerfile.alpine)
-            if [[ $matched -eq 0 ]]; then
-                for entry in "${pat_prefix[@]}"; do
-                    IFS='|' read -r img pattern <<< "$entry"
-                    if [[ "$base" == "$pattern" || "$base" == "$pattern".* ]]; then
-                        [[ "$img" != "skip" ]] && needed["$img"]=1
-                        matched=1
-                        break
-                    fi
+        # --- Shebang vote ---
+        shebang="$(head --lines=1 "$f" 2>/dev/null)" || shebang=""
+        if [[ "$shebang" =~ ^#! ]]; then
+            interp="${shebang##*[\\/]}"
+            interp="${interp%% *}"
+            # handle #!/usr/bin/env wrapper
+            if [[ "$interp" == "env" ]]; then
+                local -a env_parts=()
+                read -ra env_parts <<< "${shebang#*env}"
+                for env_arg in "${env_parts[@]}"; do
+                    [[ "$env_arg" == -* ]] && continue
+                    interp="$env_arg"
+                    break
                 done
             fi
+            if [[ -n "${SHEBANG_RULES[$interp]+x}" ]]; then
+                img="${SHEBANG_RULES[$interp]}"
+                scores["$img"]=$(( ${scores[$img]:-0} + W_SHEBANG ))
+                [[ $W_SHEBANG -gt ${max_w[$img]:-0} ]] && max_w["$img"]=$W_SHEBANG
+            fi
         fi
 
-        # --- STEP 4: flag unrecognized text files ---
-        if [[ $matched -eq 0 ]]; then
+        # --- Content heuristic votes ---
+        context=""
+        if [[ "$mime" == "application/yaml" ]]; then
+            context="yaml"
+        elif [[ "$mime" == "text/plain" ]]; then
+            context="plain"
+        fi
+        # context upgrades: plain → yaml when a stronger signal exists
+        if [[ "$context" == "plain" ]]; then
+            if [[ "$xdg_mime" == "application/yaml" ]]; then
+                context="yaml"
+            elif [[ "$ext" == "yml" || "$ext" == "yaml" ]]; then
+                context="yaml"
+                # MIME tools failed to detect YAML — give lint-yaml
+                # the W_MIME vote the format detection would have provided
+                scores["lint-yaml"]=$(( ${scores["lint-yaml"]:-0} + W_MIME ))
+                [[ $W_MIME -gt ${max_w["lint-yaml"]:-0} ]] && max_w["lint-yaml"]=$W_MIME
+            fi
+        fi
+        if [[ -n "$context" ]]; then
+            sample="$(head --lines=50 "$f" 2>/dev/null)" || sample=""
+            for rule in "${CONTENT_RULES[@]}"; do
+                IFS='|' read -r rule_ctx rule_linter rule_pattern <<< "$rule"
+                if [[ "$rule_ctx" == "$context" ]]; then
+                    if grep --quiet --extended-regexp "$rule_pattern" <<< "$sample"; then
+                        scores["$rule_linter"]=$(( ${scores[$rule_linter]:-0} + W_CONTENT ))
+                        [[ $W_CONTENT -gt ${max_w[$rule_linter]:-0} ]] && max_w["$rule_linter"]=$W_CONTENT
+                    fi
+                fi
+            done
+        fi
+
+        # --- Pattern votes (extension, filename, prefix) ---
+        if [[ -n "${pat_file[$base]+x}" ]]; then
+            img="${pat_file[$base]}"
+            scores["$img"]=$(( ${scores[$img]:-0} + W_FILE ))
+            [[ $W_FILE -gt ${max_w[$img]:-0} ]] && max_w["$img"]=$W_FILE
+        fi
+        if [[ -n "$ext" && -n "${pat_ext[$ext]+x}" ]]; then
+            img="${pat_ext[$ext]}"
+            scores["$img"]=$(( ${scores[$img]:-0} + W_EXT ))
+            [[ $W_EXT -gt ${max_w[$img]:-0} ]] && max_w["$img"]=$W_EXT
+        fi
+        for entry in "${pat_prefix[@]}"; do
+            IFS='|' read -r img pattern <<< "$entry"
+            if [[ "$base" == "$pattern" || "$base" == "$pattern".* ]]; then
+                scores["$img"]=$(( ${scores[$img]:-0} + W_PREFIX ))
+                [[ $W_PREFIX -gt ${max_w[$img]:-0} ]] && max_w["$img"]=$W_PREFIX
+                break
+            fi
+        done
+
+        # --- Pick winner by highest score with tiebreakers ---
+        winner=""
+        best_score=0
+        best_max_w=0
+        for linter in "${!scores[@]}"; do
+            score="${scores[$linter]}"
+            if (( score > best_score )); then
+                winner="$linter"
+                best_score=$score
+                best_max_w=${max_w[$linter]:-0}
+            elif (( score == best_score )); then
+                # tiebreaker 1: skip always loses to a real linter
+                if [[ "$winner" == "skip" && "$linter" != "skip" ]]; then
+                    winner="$linter"
+                    best_max_w=${max_w[$linter]:-0}
+                elif [[ "$linter" != "skip" ]]; then
+                    # tiebreaker 2: highest individual vote weight wins
+                    if (( ${max_w[$linter]:-0} > best_max_w )); then
+                        winner="$linter"
+                        best_max_w=${max_w[$linter]:-0}
+                    fi
+                fi
+            fi
+        done
+
+        if [[ -n "$winner" && "$winner" != "skip" ]]; then
+            needed["$winner"]=1
+        elif [[ ${#scores[@]} -eq 0 ]]; then
+            # no votes — flag as unsupported
             if [[ -n "$ext" ]]; then
                 unsupported[".${ext}"]=1
             else
@@ -314,15 +392,6 @@ detect_images() {
             echo "  - ${desc}" >&2
         done < <(printf '%s\n' "${!unsupported[@]}" | sort)
     fi
-
-    # apply supersession rules: domain-specific linters replace generic ones
-    local specific generic
-    for specific in "${!SUPERSEDES[@]}"; do
-        if [[ -n "${needed[$specific]+x}" ]]; then
-            generic="${SUPERSEDES[$specific]}"
-            unset "needed[$generic]"
-        fi
-    done
 
     # return sorted list of needed images
     [[ ${#needed[@]} -gt 0 ]] && printf '%s\n' "${!needed[@]}" | sort

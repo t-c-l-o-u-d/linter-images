@@ -15,102 +15,100 @@ declare -A FIX_SUPPORTED=(
     [lint-yaml]=1
 )
 
-# extensions we have linters for
-SUPPORTED_EXTS=(
-    cjs
-    csv
-    css
-    html
-    js
-    json
-    md
-    mjs
-    mount
-    path
-    py
-    rs
-    scss
-    service
-    slice
-    socket
-    target
-    timer
-    vim
-    yaml
-    yml
+# detection rules: image|match_type|pattern
+# match types: ext, file, prefix, shebang, dir, glob
+# image "skip" silently ignores a file type
+LINTER_RULES=(
+    # ansible (project-level markers)
+    "lint-ansible|dir|roles"
+    "lint-ansible|file|ansible.cfg"
+    "lint-ansible|file|site.yml"
+    "lint-ansible|file|site.yaml"
+    "lint-ansible|glob|playbooks/*.yml"
+    "lint-ansible|glob|playbooks/*.yaml"
+
+    # bash (shebang-based)
+    "lint-bash|shebang|bash"
+
+    # containerfile (prefix-based)
+    "lint-containerfile|prefix|Containerfile"
+    "lint-containerfile|prefix|Dockerfile"
+
+    # css
+    "lint-css|ext|css"
+    "lint-css|ext|scss"
+
+    # csv
+    "lint-csv|ext|csv"
+
+    # html
+    "lint-html|ext|html"
+
+    # javascript
+    "lint-javascript|ext|js"
+    "lint-javascript|ext|mjs"
+    "lint-javascript|ext|cjs"
+
+    # json
+    "lint-json|ext|json"
+
+    # markdown
+    "lint-markdown|ext|md"
+
+    # python
+    "lint-python|ext|py"
+
+    # rust
+    "lint-rust|ext|rs"
+    "lint-rust|file|Cargo.toml"
+
+    # systemd
+    "lint-systemd|ext|service"
+    "lint-systemd|ext|timer"
+    "lint-systemd|ext|socket"
+    "lint-systemd|ext|path"
+    "lint-systemd|ext|mount"
+    "lint-systemd|ext|target"
+    "lint-systemd|ext|slice"
+
+    # vim
+    "lint-vim|ext|vim"
+    "lint-vim|file|vimrc"
+
+    # yaml
+    "lint-yaml|ext|yml"
+    "lint-yaml|ext|yaml"
+
+    # --- skip: known non-code extensions ---
+    "skip|ext|cfg"
+    "skip|ext|conf"
+    "skip|ext|editorconfig"
+    "skip|ext|eot"
+    "skip|ext|gif"
+    "skip|ext|gitattributes"
+    "skip|ext|gitignore"
+    "skip|ext|ico"
+    "skip|ext|ini"
+    "skip|ext|jpg"
+    "skip|ext|jpeg"
+    "skip|ext|lock"
+    "skip|ext|png"
+    "skip|ext|svg"
+    "skip|ext|toml"
+    "skip|ext|trivyignore"
+    "skip|ext|ttf"
+    "skip|ext|txt"
+    "skip|ext|woff"
+    "skip|ext|woff2"
+
+    # --- skip: known non-code filenames ---
+    "skip|file|AUTHORS"
+    "skip|file|CHANGELOG"
+    "skip|file|COPYING"
+    "skip|file|LICENCE"
+    "skip|file|LICENSE"
+    "skip|file|Makefile"
 )
-
-# mimetypes we have linters for (bash is detected via shebang + mimetype)
-SUPPORTED_MIMES=(
-    text/x-shellscript
-)
-
-# non-code files to silently skip
-SKIP_EXTS=(
-    cfg
-    conf
-    editorconfig
-    eot
-    gif
-    gitattributes
-    gitignore
-    ico
-    ini
-    jpg
-    jpeg
-    lock
-    png
-    svg
-    toml
-    trivyignore
-    ttf
-    txt
-    woff
-    woff2
-)
-
-# known filenames we handle
-SUPPORTED_NAMES=(
-    Cargo.toml
-    ansible.cfg
-    site.yaml
-    site.yml
-    vimrc
-)
-
-# basenames that match with or without a .suffix (e.g. Containerfile.alpine)
-SUPPORTED_NAME_PREFIXES=(
-    Containerfile
-    Dockerfile
-)
-
-# non-code filenames to silently skip
-SKIP_NAMES=(
-    AUTHORS
-    CHANGELOG
-    COPYING
-    LICENCE
-    LICENSE
-    Makefile
-)
-
-has_match() {
-    local needle="$1"
-    shift
-    for item in "$@"; do
-        [[ "$needle" == "$item" ]] && return 0
-    done
-    return 1
-}
-
-is_supported_name() {
-    local name="$1"
-    has_match "$name" "${SUPPORTED_NAMES[@]}" && return 0
-    for prefix in "${SUPPORTED_NAME_PREFIXES[@]}"; do
-        [[ "$name" == "$prefix" || "$name" == "$prefix".* ]] && return 0
-    done
-    return 1
-}
 
 detect_runtime() {
     if command -v podman > /dev/null 2>&1; then
@@ -125,173 +123,129 @@ detect_runtime() {
 }
 
 detect_images() {
+    # preprocess rules into typed lookup tables
+    local -A rule_ext=()
+    local -A rule_file=()
+    local -a rule_prefix=()
+    local -a rule_shebang=()
+    local -a rule_dir=()
+    local -a rule_glob=()
     local -A needed=()
-
-    # python
-    if git ls-files '*.py' | grep --quiet .; then
-        needed[lint-python]=1
-    fi
-
-    # rust
-    if git ls-files '*.rs' 'Cargo.toml' | grep --quiet .; then
-        needed[lint-rust]=1
-    fi
-
-    # bash
-    local bash_found=0
-    while IFS= read -r f; do
-        if [[ "$(file --brief --mime-type "$f")" == "text/x-shellscript" ]]; then
-            bash_found=1
-            break
-        fi
-    done < <(git ls-files | while IFS= read -r gf; do
-        head --lines=1 "$gf" 2>/dev/null | grep --quiet '^#!.*bash' && echo "$gf"
-    done)
-    if [[ "$bash_found" -eq 1 ]]; then
-        needed[lint-bash]=1
-    fi
-
-    # csv
-    if git ls-files '*.csv' | grep --quiet .; then
-        needed[lint-csv]=1
-    fi
-
-    # css
-    if git ls-files '*.css' '*.scss' | grep --quiet .; then
-        needed[lint-css]=1
-    fi
-
-    # html
-    if git ls-files '*.html' | grep --quiet .; then
-        needed[lint-html]=1
-    fi
-
-    # javascript
-    if git ls-files '*.js' '*.mjs' '*.cjs' | grep --quiet .; then
-        needed[lint-javascript]=1
-    fi
-
-    # json
-    if git ls-files '*.json' | grep --quiet .; then
-        needed[lint-json]=1
-    fi
-
-    # yaml
-    if git ls-files '*.yml' '*.yaml' | grep --quiet .; then
-        needed[lint-yaml]=1
-    fi
-
-    # vim
-    if git ls-files '*.vim' 'vimrc' '*/vimrc' | grep --quiet .; then
-        needed[lint-vim]=1
-    fi
-
-    # systemd
-    if git ls-files '*.service' '*.timer' '*.socket' '*.path' '*.mount' '*.target' '*.slice' | grep --quiet .; then
-        needed[lint-systemd]=1
-    fi
-
-    # markdown
-    if git ls-files '*.md' | grep --quiet .; then
-        needed[lint-markdown]=1
-    fi
-
-    # containerfile
-    if git ls-files 'Containerfile' 'Containerfile.*' 'Dockerfile' 'Dockerfile.*' \
-        '**/Containerfile' '**/Containerfile.*' '**/Dockerfile' '**/Dockerfile.*' \
-        | grep --quiet .; then
-        needed[lint-containerfile]=1
-    fi
-
-    # ansible
-    if [[ -d "roles" ]] || [[ -f "ansible.cfg" ]] || [[ -f "site.yml" ]] || [[ -f "site.yaml" ]] || git ls-files 'playbooks/*.yml' 'playbooks/*.yaml' | grep --quiet .; then
-        needed[lint-ansible]=1
-    fi
-
-    while IFS= read -r image; do
-        echo "$image"
-    done < <(printf '%s\n' "${!needed[@]}" | sort)
-}
-
-detect_unsupported() {
     local -A unsupported=()
+    local rule image match_type pattern entry
+    local f base ext matched img shebang interp mime desc
 
+    for rule in "${LINTER_RULES[@]}"; do
+        IFS='|' read -r image match_type pattern <<< "$rule"
+        case "$match_type" in
+            ext)     rule_ext["$pattern"]="$image" ;;
+            file)    rule_file["$pattern"]="$image" ;;
+            prefix)  rule_prefix+=("$image|$pattern") ;;
+            shebang) rule_shebang+=("$image|$pattern") ;;
+            dir)     rule_dir+=("$image|$pattern") ;;
+            glob)    rule_glob+=("$image|$pattern") ;;
+        esac
+    done
+
+    # project-level detection (dir and glob rules)
+    for entry in "${rule_dir[@]}"; do
+        IFS='|' read -r image pattern <<< "$entry"
+        [[ -d "$pattern" ]] && needed["$image"]=1
+    done
+    for entry in "${rule_glob[@]}"; do
+        IFS='|' read -r image pattern <<< "$entry"
+        git ls-files "$pattern" | grep --quiet . && needed["$image"]=1
+    done
+
+    # single-pass file walk
     while IFS= read -r f; do
-        local base
         base="$(basename "$f")"
+        ext=""
+        [[ "$f" == *.* ]] && ext="${f##*.}"
+        matched=0
 
-        # skip known supported filenames
-        if is_supported_name "$base"; then
-            continue
+        # 1. exact filename (O(1) lookup)
+        if [[ -n "${rule_file[$base]+x}" ]]; then
+            img="${rule_file[$base]}"
+            [[ "$img" != "skip" ]] && needed["$img"]=1
+            matched=1
         fi
 
-        # skip known non-code filenames
-        if has_match "$base" "${SKIP_NAMES[@]}"; then
-            continue
-        fi
-
-        # check extension
-        local ext=""
-        if [[ "$f" == *.* ]]; then
-            ext="${f##*.}"
-        fi
-
-        # skip if extension is supported
-        if [[ -n "$ext" ]] && has_match "$ext" "${SUPPORTED_EXTS[@]}"; then
-            continue
-        fi
-
-        # skip known non-code extensions
-        if [[ -n "$ext" ]] && has_match "$ext" "${SKIP_EXTS[@]}"; then
-            continue
-        fi
-
-        # check mimetype
-        local mime
-        mime="$(file --brief --mime-type "$f" 2>/dev/null)" || continue
-
-        # skip if mimetype is supported (e.g. extensionless shell scripts)
-        if has_match "$mime" "${SUPPORTED_MIMES[@]}"; then
-            continue
-        fi
-
-        # skip binary files
-        if [[ "$mime" == application/octet-stream ]] || [[ "$mime" == inode/* ]] || [[ "$mime" == image/* ]]; then
-            continue
-        fi
-
-        # check shebang for extensionless scripts
-        if [[ -z "$ext" ]]; then
-            local shebang
-            shebang="$(head --lines=1 "$f" 2>/dev/null)" || continue
-            if [[ "$shebang" =~ ^#!.*bash ]]; then
-                continue
+        # 2. filename prefix (e.g. Containerfile, Containerfile.alpine)
+        for entry in "${rule_prefix[@]}"; do
+            IFS='|' read -r img pattern <<< "$entry"
+            if [[ "$base" == "$pattern" || "$base" == "$pattern".* ]]; then
+                [[ "$img" != "skip" ]] && needed["$img"]=1
+                matched=1
+                break
             fi
-            # flag other interpreters we don't support
+        done
+
+        # 3. extension (O(1) lookup)
+        if [[ -n "$ext" && -n "${rule_ext[$ext]+x}" ]]; then
+            img="${rule_ext[$ext]}"
+            [[ "$img" != "skip" ]] && needed["$img"]=1
+            matched=1
+        fi
+
+        # 4. shebang (only if unmatched — avoids reading every file)
+        if [[ $matched -eq 0 ]]; then
+            shebang="$(head --lines=1 "$f" 2>/dev/null)" || shebang=""
             if [[ "$shebang" =~ ^#! ]]; then
-                local interp
-                interp="${shebang##*[\\/]}"
-                interp="${interp%% *}"
-                unsupported["${base} (${interp})"]=1
-                continue
+                for entry in "${rule_shebang[@]}"; do
+                    IFS='|' read -r img pattern <<< "$entry"
+                    if [[ "$shebang" =~ ^#!.*${pattern} ]]; then
+                        needed["$img"]=1
+                        matched=1
+                        break
+                    fi
+                done
+
+                # unmatched shebang — flag interpreter as unsupported
+                if [[ $matched -eq 0 ]]; then
+                    interp="${shebang##*[\\/]}"
+                    interp="${interp%% *}"
+                    unsupported["${base} (${interp})"]=1
+                    matched=1
+                fi
             fi
         fi
 
-        # report by extension or filename
-        if [[ -n "$ext" ]]; then
-            unsupported[".${ext}"]=1
-        else
-            unsupported["${base} (${mime})"]=1
+        # 5. unsupported (still unmatched after all checks)
+        if [[ $matched -eq 0 ]]; then
+            mime="$(file --brief --mime-type "$f" 2>/dev/null)" || continue
+
+            # skip binary and image files silently
+            if [[ "$mime" == application/octet-stream ]] \
+                || [[ "$mime" == inode/* ]] \
+                || [[ "$mime" == image/* ]]; then
+                continue
+            fi
+
+            # skip non-bash shell scripts silently
+            if [[ "$mime" == text/x-shellscript ]]; then
+                continue
+            fi
+
+            if [[ -n "$ext" ]]; then
+                unsupported[".${ext}"]=1
+            else
+                unsupported["${base} (${mime})"]=1
+            fi
         fi
     done < <(git ls-files)
 
+    # print unsupported warnings to stderr
     if [[ ${#unsupported[@]} -gt 0 ]]; then
-        echo ""
-        echo "Note: no linter available for these file types:"
+        echo "" >&2
+        echo "Note: no linter available for these file types:" >&2
         while IFS= read -r desc; do
-            echo "  - ${desc}"
+            echo "  - ${desc}" >&2
         done < <(printf '%s\n' "${!unsupported[@]}" | sort)
     fi
+
+    # return sorted list of needed images
+    [[ ${#needed[@]} -gt 0 ]] && printf '%s\n' "${!needed[@]}" | sort
 }
 
 run_container() {
@@ -469,8 +423,6 @@ EOF
     for img in "${images[@]}"; do
         echo "  - ${img}"
     done
-
-    detect_unsupported
 
     local errors=0
     local passed=0

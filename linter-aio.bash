@@ -418,9 +418,17 @@ run_container() {
     echo "  ${image_name} :: ${command##*/}"
     echo "-------------------------------------------"
 
+    local user_args=()
+    if [[ "$RUNTIME" == "podman" ]]; then
+        user_args=("--userns=keep-id:uid=9001,gid=9001")
+    else
+        user_args=(--user "$(id --user):$(id --group)")
+    fi
+
     "$RUNTIME" run \
         --rm \
         --pull always \
+        "${user_args[@]}" \
         --volume "$WORKTREE":/workspace:"$vol_opts" \
         "$full_image" \
         "$command"
@@ -472,6 +480,13 @@ else
     echo \"Install podman or docker and try again.\"
     exit 1
 fi
+
+# run as unprivileged user inside the container
+if [[ \"\$RUNTIME\" == \"podman\" ]]; then
+    USER_ARGS=\"--userns=keep-id:uid=9001,gid=9001\"
+else
+    USER_ARGS=\"--user \$(id --user):\$(id --group)\"
+fi
 "
 
     # fix section: auto-fix images
@@ -487,6 +502,7 @@ fi
 \"\$RUNTIME\" run \\
     --rm \\
     --pull always \\
+    \$USER_ARGS \\
     --volume \"\$(pwd)\":/workspace:z \\
     \"\${REGISTRY}/${img}:latest\" \\
     /usr/local/bin/fix"
@@ -502,6 +518,7 @@ fi
 \"\$RUNTIME\" run \\
     --rm \\
     --pull always \\
+    \$USER_ARGS \\
     --volume \"\$(pwd)\":/workspace:ro,z \\
     \"\${REGISTRY}/${img}:latest\" \\
     /usr/local/bin/lint"

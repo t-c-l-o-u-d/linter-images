@@ -13,3 +13,5 @@ ignore:
   - vulnerability: CVE-2025-68121
   # lint-css: js-yaml — upstream Arch package
   - vulnerability: CVE-2025-64718
+  # lint-markdown: markdown-it 14.1.0 — upstream Arch package, awaiting rebuild
+  - vulnerability: CVE-2026-2327

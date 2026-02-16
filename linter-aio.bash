@@ -429,14 +429,17 @@ run_container() {
         --rm \
         --pull always \
         "${user_args[@]}" \
-        --volume "$WORKTREE":/workspace:"$vol_opts" \
+        --volume "$MOUNT_DIR":/workspace:"$vol_opts" \
+        --volume "$GIT_ABS_DIR":/workspace/.git:ro,z \
+        --env GIT_DIR=/workspace/.git \
+        --env GIT_WORK_TREE=/workspace \
         "$full_image" \
         "$command"
 }
 
 install_hook() {
     local git_dir
-    git_dir="$(git rev-parse --git-dir 2>/dev/null)" || {
+    git_dir="$(git rev-parse --absolute-git-dir 2>/dev/null)" || {
         echo "ERROR: Not a git repository."
         exit 1
     }
@@ -562,7 +565,7 @@ main() {
         exit 1
     fi
 
-    git rev-parse --git-dir > /dev/null 2>&1 || {
+    GIT_ABS_DIR="$(git rev-parse --absolute-git-dir 2>/dev/null)" || {
         echo "ERROR: Not a git repository." >&2
         echo "Run this script from inside a git-managed project." >&2
         exit 1
@@ -571,6 +574,19 @@ main() {
     WORKTREE="$(git rev-parse --show-toplevel 2>/dev/null \
         || git config core.worktree 2>/dev/null \
         || echo "$PWD")"
+
+    # When the gitdir lives outside the worktree (separated gitdir, e.g.
+    # dotfiles repo with core.worktree=$HOME), mounting the full worktree
+    # is unsafe — it may be $HOME.  Stage only tracked files into a temp dir.
+    MOUNT_DIR="$WORKTREE"
+    if [[ "${GIT_ABS_DIR}" != "${WORKTREE}/.git" ]]; then
+        MOUNT_DIR="$(mktemp -d)"
+        trap 'rm -rf "$MOUNT_DIR"' EXIT
+        git ls-files --full-name -z | while IFS= read -r -d '' f; do
+            mkdir -p "$MOUNT_DIR/$(dirname "$f")"
+            cp -- "$WORKTREE/$f" "$MOUNT_DIR/$f"
+        done
+    fi
 
     RUNTIME="$(detect_runtime)"
 

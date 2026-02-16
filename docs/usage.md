@@ -13,13 +13,17 @@ scanning).
 podman run \
   --rm \
   --pull always \
+  --userns=keep-id:uid=9001,gid=9001 \
   --volume "$(pwd)":/workspace:ro,z \
   IMAGE \
   /usr/local/bin/lint
 ```
 
-That's it. It exits `0` on pass, `1` on fail. Works the
-same way with `docker` instead of `podman`.
+That's it. It exits `0` on pass, `1` on fail. Containers
+run as unprivileged UID 9001. The `--userns=keep-id`
+flag maps your host user to that UID so volume mounts
+are accessible. For `docker`, replace the flag with
+`--user "$(id -u):$(id -g)"`.
 
 > **Note:** `lint-rust` requires a read-write mount
 > (`:z` instead of `:ro,z`) because cargo writes
@@ -59,18 +63,27 @@ else
     exit 1
 fi
 
+# run as unprivileged user inside the container
+if [[ "$RUNTIME" == "podman" ]]; then
+    USER_ARGS="--userns=keep-id:uid=9001,gid=9001"
+else
+    USER_ARGS="--user $(id -u):$(id -g)"
+fi
+
 # Add one block per language your project uses.
 
 # --- Python (fix + lint) ---
 "$RUNTIME" run \
   --rm \
   --pull always \
+  $USER_ARGS \
   --volume "$(pwd)":/workspace:z \
   "${REGISTRY}/lint-python:latest" \
   /usr/local/bin/fix
 "$RUNTIME" run \
   --rm \
   --pull always \
+  $USER_ARGS \
   --volume "$(pwd)":/workspace:ro,z \
   "${REGISTRY}/lint-python:latest" \
   /usr/local/bin/lint
@@ -79,12 +92,14 @@ fi
 "$RUNTIME" run \
   --rm \
   --pull always \
+  $USER_ARGS \
   --volume "$(pwd)":/workspace:z \
   "${REGISTRY}/lint-bash:latest" \
   /usr/local/bin/fix
 "$RUNTIME" run \
   --rm \
   --pull always \
+  $USER_ARGS \
   --volume "$(pwd)":/workspace:ro,z \
   "${REGISTRY}/lint-bash:latest" \
   /usr/local/bin/lint
@@ -93,12 +108,14 @@ fi
 "$RUNTIME" run \
   --rm \
   --pull always \
+  $USER_ARGS \
   --volume "$(pwd)":/workspace:ro,z \
   "${REGISTRY}/lint-yaml:latest" \
   /usr/local/bin/lint
 "$RUNTIME" run \
   --rm \
   --pull always \
+  $USER_ARGS \
   --volume "$(pwd)":/workspace:ro,z \
   "${REGISTRY}/lint-json:latest" \
   /usr/local/bin/lint

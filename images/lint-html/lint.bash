@@ -22,8 +22,9 @@ elif [[ -f .tidyrc ]]; then
 fi
 errors=0
 for f in "${html_files[@]}"; do
-    if ! tidy "${tidy_args[@]}" "$f" > /dev/null 2>&1; then
-        echo "  WARN: $f"
+    if ! output=$(tidy "${tidy_args[@]}" "$f" 2>&1 > /dev/null); then
+        echo "  ${f}:"
+        echo "    ${output//$'\n'/$'\n'    }"
         errors=$((errors + 1))
     fi
 done

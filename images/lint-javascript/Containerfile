@@ -6,7 +6,6 @@ FROM ghcr.io/t-c-l-o-u-d/linter-images/base-linter:latest
 RUN pacman --sync --refresh --noconfirm \
     biome \
     eslint \
-    git \
     nodejs
 
 # clean up pacman cache

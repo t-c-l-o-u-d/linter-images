@@ -7,7 +7,6 @@ RUN pacman --sync --refresh --noconfirm \
     cargo-audit \
     cargo-deny \
     gcc \
-    git \
     pkgconf \
     rust
 

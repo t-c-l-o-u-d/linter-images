@@ -27,7 +27,11 @@ LINTER_RULES=(
     "lint-ansible|glob|playbooks/*.yml"
     "lint-ansible|glob|playbooks/*.yaml"
 
-    # bash (shebang-based)
+    # bash (extension, filename, and shebang-based)
+    "lint-bash|ext|bash"
+    "lint-bash|ext|sh"
+    "lint-bash|file|.bashrc"
+    "lint-bash|file|.bash_profile"
     "lint-bash|shebang|bash"
 
     # containerfile (prefix-based)
@@ -80,28 +84,45 @@ LINTER_RULES=(
     "lint-yaml|ext|yaml"
 
     # --- skip: known non-code extensions ---
+    "skip|ext|bak"
+    "skip|ext|bu"
+    "skip|ext|build"
     "skip|ext|cfg"
     "skip|ext|conf"
+    "skip|ext|crt"
     "skip|ext|editorconfig"
     "skip|ext|eot"
     "skip|ext|gif"
     "skip|ext|gitattributes"
     "skip|ext|gitignore"
+    "skip|ext|gotemplate"
     "skip|ext|ico"
+    "skip|ext|in"
     "skip|ext|ini"
+    "skip|ext|internal"
+    "skip|ext|j2"
     "skip|ext|jpg"
     "skip|ext|jpeg"
+    "skip|ext|locale"
     "skip|ext|lock"
+    "skip|ext|mp3"
+    "skip|ext|pdf"
+    "skip|ext|placeholder"
     "skip|ext|png"
+    "skip|ext|pub"
+    "skip|ext|sixel"
     "skip|ext|svg"
     "skip|ext|toml"
     "skip|ext|trivyignore"
     "skip|ext|ttf"
     "skip|ext|txt"
+    "skip|ext|webp"
     "skip|ext|woff"
     "skip|ext|woff2"
 
     # --- skip: known non-code filenames ---
+    "skip|file|.ansible-lint"
+    "skip|file|.yamllint"
     "skip|file|AUTHORS"
     "skip|file|CHANGELOG"
     "skip|file|COPYING"

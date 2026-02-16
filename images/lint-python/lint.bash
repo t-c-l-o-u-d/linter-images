@@ -53,6 +53,21 @@ else
     echo "PASS: mypy"
 fi
 
+echo ""
+echo "Running bandit..."
+bandit_args=(--recursive --quiet)
+if [[ -f .linter/.bandit ]]; then
+    bandit_args+=(--configfile .linter/.bandit)
+elif [[ -f .bandit ]]; then
+    bandit_args+=(--configfile .bandit)
+fi
+if ! bandit "${bandit_args[@]}" "${py_files[@]}"; then
+    echo "FAIL: bandit"
+    errors=$((errors + 1))
+else
+    echo "PASS: bandit"
+fi
+
 if [[ $errors -gt 0 ]]; then
     echo ""
     echo "Python linting failed with $errors error(s)"

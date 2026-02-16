@@ -4,6 +4,7 @@ FROM ghcr.io/t-c-l-o-u-d/linter-images/base-linter:latest
 
 # install linter packages
 RUN pacman --sync --refresh --noconfirm \
+    bandit \
     git \
     mypy \
     python \
@@ -21,6 +22,6 @@ ENV LINTER_IMAGE=lint-python
 WORKDIR /workspace
 
 LABEL org.opencontainers.image.authors "https://github.com/t-c-l-o-u-d"
-LABEL org.opencontainers.image.description "Linter image for python: ruff, mypy"
+LABEL org.opencontainers.image.description "Linter image for python: ruff, mypy, bandit"
 LABEL org.opencontainers.image.licenses "AGPL-3.0-or-later"
 LABEL org.opencontainers.image.source "https://github.com/t-c-l-o-u-d/linter-images"

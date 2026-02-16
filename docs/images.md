@@ -13,7 +13,7 @@
 | `lint-javascript`    | eslint, biome                                  | Yes       |
 | `lint-json`          | python json.tool                               | No        |
 | `lint-markdown`      | markdownlint-cli2                              | No        |
-| `lint-python`        | ruff, mypy                                     | Yes       |
+| `lint-python`        | ruff, mypy, bandit                             | Yes       |
 | `lint-rust`          | cargo fmt, clippy, audit, deny, test, check    | Yes       |
 | `lint-systemd`       | systemd-analyze                                | No        |
 | `lint-vim`           | vint                                           | No        |

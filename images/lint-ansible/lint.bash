@@ -6,6 +6,20 @@ set -euo pipefail
 source /usr/local/lib/linter-header.bash
 header
 
+req_file=""
+if [[ -f .linter/requirements.yml ]]; then
+    req_file=".linter/requirements.yml"
+elif [[ -f collections/requirements.yml ]]; then
+    req_file="collections/requirements.yml"
+elif [[ -f requirements.yml ]]; then
+    req_file="requirements.yml"
+fi
+
+if [[ -n "$req_file" ]]; then
+    echo "Installing Galaxy collections from ${req_file}..."
+    ansible-galaxy collection install --requirements-file "$req_file"
+fi
+
 errors=0
 
 echo "Running ansible-lint..."

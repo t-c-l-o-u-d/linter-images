@@ -7,7 +7,8 @@ source /usr/local/lib/linter-header.bash
 header
 
 mapfile -t bash_scripts < <(
-    grep --recursive --files-with-matches --exclude-dir=.git '^#!.*bash' . \
+    git ls-files -z \
+    | xargs --null grep --files-with-matches '^#!.*bash' \
     | while IFS= read -r f; do
         if [[ "$(file --brief --mime-type "$f")" == "text/x-shellscript" ]]; then
             printf '%s\n' "$f"

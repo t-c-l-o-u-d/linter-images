@@ -154,7 +154,7 @@ detect_images() {
     done
     for entry in "${rule_glob[@]}"; do
         IFS='|' read -r image pattern <<< "$entry"
-        git ls-files "$pattern" | grep --quiet . && needed["$image"]=1
+        git -c core.quotePath=false ls-files "$pattern" | grep --quiet . && needed["$image"]=1
     done
 
     # single-pass file walk
@@ -233,7 +233,7 @@ detect_images() {
                 unsupported["${base} (${mime})"]=1
             fi
         fi
-    done < <(git ls-files)
+    done < <(git -c core.quotePath=false ls-files)
 
     # print unsupported warnings to stderr
     if [[ ${#unsupported[@]} -gt 0 ]]; then

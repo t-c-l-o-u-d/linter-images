@@ -11,7 +11,7 @@
 | `lint-css`           | stylelint, biome                               | Yes       |
 | `lint-html`          | tidy                                           | No        |
 | `lint-javascript`    | eslint, biome                                  | Yes       |
-| `lint-json`          | python json.tool                               | No        |
+| `lint-json`          | python json.tool, jq                           | Yes       |
 | `lint-markdown`      | markdownlint-cli2                              | No        |
 | `lint-python`        | ruff, mypy, bandit                             | Yes       |
 | `lint-rust`          | cargo fmt, clippy, audit, deny, test, check    | Yes       |

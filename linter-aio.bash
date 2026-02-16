@@ -9,6 +9,7 @@ declare -A FIX_SUPPORTED=(
     [lint-bash]=1
     [lint-css]=1
     [lint-javascript]=1
+    [lint-json]=1
     [lint-python]=1
     [lint-rust]=1
     [lint-yaml]=1

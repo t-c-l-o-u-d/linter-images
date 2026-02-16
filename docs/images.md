@@ -17,7 +17,7 @@
 | `lint-rust`          | cargo fmt, clippy, audit, deny, test, check    | Yes       |
 | `lint-systemd`       | systemd-analyze                                | No        |
 | `lint-vim`           | vint                                           | No        |
-| `lint-yaml`          | yamllint                                       | No        |
+| `lint-yaml`          | yamllint, yamlfmt                              | Yes       |
 
 Every image has a `/usr/local/bin/lint` script. Images
 marked **Yes** also have a `/usr/local/bin/fix` script

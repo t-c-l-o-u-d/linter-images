@@ -11,6 +11,7 @@ declare -A FIX_SUPPORTED=(
     [lint-javascript]=1
     [lint-python]=1
     [lint-rust]=1
+    [lint-yaml]=1
 )
 
 # extensions we have linters for

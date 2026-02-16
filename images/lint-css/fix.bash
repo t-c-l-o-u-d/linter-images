@@ -2,21 +2,9 @@
 # GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
 set -euo pipefail
 
-cat << 'EOF'
-===========================================
-=============== Fixer: css ================
-===========================================
-============ Brought to you by ============
-       _       _                 _
-      | |_ ___| | ___  _   _  __| |
-      | __/ __| |/ _ \| | | |/ _` |
-      | || (__| | (_) | |_| | (_| |
-       \__\___|_|\___/ \__,_|\__,_|
-===========================================
-===== https://github.com/t-c-l-o-u-d =====
-===========================================
-EOF
-echo ""
+# shellcheck source=/dev/null
+source /usr/local/lib/linter-header.bash
+header
 
 mapfile -t css_files < <(git ls-files '*.css')
 

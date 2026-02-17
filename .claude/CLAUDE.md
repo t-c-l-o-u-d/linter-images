@@ -107,6 +107,17 @@ hook runs `bash linter-aio.bash fix` then
 `bash linter-aio.bash lint` automatically on every
 commit. To lint manually, use `bash linter-aio.bash lint`.
 
+To lint an external project, run the script from inside
+that project's git worktree:
+
+```bash
+cd ~/community/some-project
+bash ~/git/linter-images/linter-aio.bash lint
+```
+
+The script auto-detects the worktree via `git rev-parse`.
+It does not accept a directory argument.
+
 ## Building images
 
 Never build images locally. When touching anything in

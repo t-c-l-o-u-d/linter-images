@@ -632,6 +632,7 @@ EOF
 
     local errors=0
     local passed=0
+    local total_file_failures=0
 
     if [[ "$MODE" == "fix" ]]; then
         for img in "${images[@]}"; do
@@ -663,15 +664,21 @@ EOF
         echo "  Errors:  ${errors}"
         echo "==========================================="
     else
+        local container_log
+        local file_fails
+        container_log=$(mktemp)
         for img in "${images[@]}"; do
-            if run_container "$img" "/usr/local/bin/lint"; then
+            if run_container "$img" "/usr/local/bin/lint" | tee "$container_log"; then
                 echo "PASS: ${img}"
                 passed=$((passed + 1))
             else
                 echo "FAIL: ${img}"
                 errors=$((errors + 1))
             fi
+            file_fails=$(grep --count --extended-regexp '^[[:space:]]+FAIL: ' "$container_log" 2>/dev/null || echo 0)
+            total_file_failures=$((total_file_failures + file_fails))
         done
+        rm --force "$container_log"
 
         echo ""
         echo "==========================================="
@@ -680,12 +687,17 @@ EOF
         echo "  Passed:  ${passed}"
         echo "  Failed:  ${errors}"
         echo "  Total:   ${#images[@]}"
+        echo "  File failures: ${total_file_failures}"
         echo "==========================================="
     fi
 
     if [[ ${errors} -gt 0 ]]; then
         echo ""
-        echo "${MODE^} failed with ${errors} error(s)"
+        if [[ "$MODE" == "lint" && ${total_file_failures} -gt 0 ]]; then
+            echo "${MODE^} failed — ${errors} image(s), ${total_file_failures} file(s)"
+        else
+            echo "${MODE^} failed with ${errors} error(s)"
+        fi
         exit 1
     fi
 

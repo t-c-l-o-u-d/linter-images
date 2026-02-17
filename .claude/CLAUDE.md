@@ -60,17 +60,24 @@ ghcr.io via GitHub Actions.
 - Use `git ls-files` or `grep -rl` for file discovery
 - Accumulate errors and report PASS/FAIL per tool
 - Every script prints the ASCII banner on startup
-- **Per-file reporting (required):** lint scripts must
-  run each tool per-file and print `PASS: <path>` or
-  `FAIL: <path>` for every file, then a tool-level
-  summary (`PASS: toolname` or
-  `FAIL: toolname (N file(s))`). Fix scripts must
-  print each file path before processing it.
-  Project-level tools (cargo, mypy) that cannot run
-  per-file must list all files before the tool runs.
-  Tools with structured output (ansible-lint) should
-  run once and parse output for per-file PASS/FAIL
-  results.
+- **Per-file reporting (required):** every lint tool
+  must print `PASS: <path>` or `FAIL: <path>` for
+  every file, then a tool-level summary
+  (`PASS: toolname` or
+  `FAIL: toolname (N file(s))`). Three strategies:
+  1. **Per-file invocation** — run the tool once per
+     file (shellcheck, ruff, bandit, hadolint, etc.)
+  2. **Structured output parsing** — run once with
+     JSON/machine output, parse per-file results with
+     `jq` (ansible-lint, mypy, cargo clippy, etc.)
+  3. **Project-level only** — tools that have no
+     per-file output at all (cargo audit, cargo deny,
+     cargo test) list all files before running, then
+     report a single tool-level PASS/FAIL.
+  Prefer strategy 2 over 1 when the tool supports it,
+  as it avoids repeated startup overhead.
+  Fix scripts must print each file path before
+  processing it.
 
 ### Packages
 

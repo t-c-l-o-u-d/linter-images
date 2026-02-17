@@ -20,6 +20,8 @@ ghcr.io via GitHub Actions.
   - Handles all pacman setup: mirrorlist, parallel
     downloads, keyring, sysupgrade
   - Child images must NOT duplicate these steps
+  - Any tool needed by 2 or more images belongs in
+    base-linter, not in individual child images
 - **Child images** (`images/lint-*/Containerfile`)
   inherit from base-linter:
   - `FROM ghcr.io/t-c-l-o-u-d/linter-images/base-linter:latest`

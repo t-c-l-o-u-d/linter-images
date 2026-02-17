@@ -203,7 +203,7 @@ detect_images() {
     local -a pat_dir=()
     local -a pat_glob=()
     local -A needed=()
-    local -A unsupported=()
+    local -a undetected=()
     local -A scores=()
     local -A max_w=()
     local rule image match_type pattern entry
@@ -376,22 +376,17 @@ detect_images() {
         if [[ -n "$winner" && "$winner" != "skip" ]]; then
             needed["$winner"]=1
         elif [[ ${#scores[@]} -eq 0 ]]; then
-            # no votes — flag as unsupported
-            if [[ -n "$ext" ]]; then
-                unsupported[".${ext}"]=1
-            else
-                unsupported["${base} (${mime})"]=1
-            fi
+            undetected+=("$f")
         fi
     done < <(git -c core.quotePath=false ls-files --full-name "$WORKTREE")
 
-    # print unsupported warnings to stderr
-    if [[ ${#unsupported[@]} -gt 0 ]]; then
+    # print undetected file warnings to stderr
+    if [[ ${#undetected[@]} -gt 0 ]]; then
         echo "" >&2
-        echo "Note: no linter available for these file types:" >&2
+        echo "Note: could not detect a linter for these files:" >&2
         while IFS= read -r desc; do
             echo "  - ${desc}" >&2
-        done < <(printf '%s\n' "${!unsupported[@]}" | sort)
+        done < <(printf '%s\n' "${undetected[@]}" | sort)
     fi
 
     # return sorted list of needed images

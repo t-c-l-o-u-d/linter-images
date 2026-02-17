@@ -20,13 +20,12 @@ if [[ -n "$req_file" ]]; then
     ansible-galaxy collection install --requirements-file "$req_file"
 fi
 
-# List files being checked
 mapfile -t ansible_files < <(git ls-files '*.yml' '*.yaml')
-printf "Files:\n"
-for f in "${ansible_files[@]}"; do
-    printf "  %s\n" "$f"
-done
-echo ""
+
+if [[ ${#ansible_files[@]} -eq 0 ]]; then
+    echo "No ansible files found, skipping."
+    exit 0
+fi
 
 errors=0
 
@@ -37,11 +36,30 @@ if [[ -f .linter/.ansible-lint ]]; then
 elif [[ -f .ansible-lint ]]; then
     al_args+=(--config-file .ansible-lint)
 fi
-if ! ansible-lint "${al_args[@]}"; then
-    echo "FAIL: ansible-lint"
+
+# run once in auto-detection mode, capture json violations from stdout
+al_output=$(ansible-lint "${al_args[@]}" --format json --show-relpath 2>/dev/null) || true
+al_output="${al_output:-[]}"
+
+# report per-file results
+tool_errors=0
+for f in "${ansible_files[@]}"; do
+    file_violations=$(jq --raw-output --arg f "$f" \
+        '.[] | select(.location.path == $f) | "\(.location.path):\(.location.lines.begin): \(.check_name): \(.description)"' \
+        <<< "$al_output")
+    if [[ -n "$file_violations" ]]; then
+        printf "%s\n" "$file_violations"
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: ansible-lint (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: ansible-lint"
+    printf "PASS: ansible-lint\n"
 fi
 
 if [[ $errors -gt 0 ]]; then

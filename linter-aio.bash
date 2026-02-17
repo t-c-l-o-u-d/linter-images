@@ -430,9 +430,11 @@ run_container() {
         --pull always \
         "${user_args[@]}" \
         --volume "$MOUNT_DIR":/workspace:"$vol_opts" \
+        --volume "$MOUNT_DIR":"$WORKTREE":ro,z \
         --volume "$GIT_ABS_DIR":/workspace/.git:ro,z \
         --env GIT_DIR=/workspace/.git \
         --env GIT_WORK_TREE=/workspace \
+        --env HOME="$WORKTREE" \
         "$full_image" \
         "$command"
 }

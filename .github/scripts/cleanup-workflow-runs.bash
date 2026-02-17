@@ -30,14 +30,14 @@ while IFS=$'\t' read -r WORKFLOW_ID WORKFLOW_NAME; do
   done <<< "$RUN_IDS"
 
   echo "::endgroup::"
-done <<< "$(gh workflow list --all --json id,name --jq '.[] | [(.id | tostring), .name] | join("\t")')"
+done <<< "$(gh workflow list --all --json id,name,state --jq '.[] | select(.state == "active") | [(.id | tostring), .name] | join("\t")')"
 
 # Delete all runs from stale workflows (renamed or removed files)
 echo "::group::Stale workflow cleanup"
 STALE_RUNS=$(gh run list --limit 500 --json databaseId,workflowName \
   --jq '.[] | [(.databaseId | tostring), .workflowName] | join("\t")')
 
-if [[ -z "${STALE_RUNS}" ]]; then
+if [[ -z "$STALE_RUNS" ]]; then
   echo "No runs found."
 else
   while IFS=$'\t' read -r RUN_ID WORKFLOW_NAME; do

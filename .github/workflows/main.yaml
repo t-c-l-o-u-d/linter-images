@@ -16,7 +16,7 @@ permissions:
 jobs:
   build-base:
     name: Build Base Image
-    uses: ./.github/workflows/img-build-and-prune-ci.yaml
+    uses: ./.github/workflows/build-scan-prune.yaml
     with:
       IMAGE_NAME: "base-linter"
       IMAGE_DIR: "images/base-linter"
@@ -45,7 +45,7 @@ jobs:
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.discover.outputs.matrix) }}
-    uses: ./.github/workflows/img-build-and-prune-ci.yaml
+    uses: ./.github/workflows/build-scan-prune.yaml
     with:
       IMAGE_NAME: ${{ matrix.IMAGE_NAME }}
       IMAGE_DIR: ${{ matrix.IMAGE_DIR }}

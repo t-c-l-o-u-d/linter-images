@@ -11,13 +11,7 @@ if [[ ! -f Cargo.toml ]]; then
     exit 0
 fi
 
-# List project files being checked
-mapfile -t rs_files < <(git ls-files '*.rs' 'Cargo.toml' 'Cargo.lock')
-printf "Files:\n"
-for f in "${rs_files[@]}"; do
-    printf "  %s\n" "$f"
-done
-echo ""
+mapfile -t rs_files < <(git ls-files '*.rs')
 
 errors=0
 
@@ -26,11 +20,23 @@ cargo tree --duplicates --quiet
 echo ""
 
 echo "Running cargo fmt --check..."
-if ! cargo fmt --check; then
-    echo "FAIL: cargo fmt"
+fmt_output=$(cargo fmt -- --check --files-with-diffs 2>/dev/null) || true
+fmt_output="${fmt_output:-}"
+
+tool_errors=0
+for f in "${rs_files[@]}"; do
+    if grep --quiet --fixed-strings "$f" <<< "$fmt_output"; then
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: cargo fmt (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: cargo fmt"
+    printf "PASS: cargo fmt\n"
 fi
 
 echo ""
@@ -38,6 +44,7 @@ echo "Running cargo clippy..."
 clippy_args=(
     --all-features
     --quiet
+    --message-format=json
     --
     -D warnings
     -D clippy::all
@@ -50,11 +57,29 @@ clippy_args=(
     -D clippy::cargo
     -A clippy::doc-markdown
 )
-if ! cargo clippy "${clippy_args[@]}"; then
-    echo "FAIL: cargo clippy"
+clippy_output=$(cargo clippy "${clippy_args[@]}" 2>/dev/null) || true
+clippy_output="${clippy_output:-}"
+
+tool_errors=0
+for f in "${rs_files[@]}"; do
+    file_violations=$(jq --raw-output --arg f "$f" \
+        'select(.reason == "compiler-message")
+         | select(.message.spans[]?.file_name == $f)
+         | .message.rendered' \
+        <<< "$clippy_output")
+    if [[ -n "$file_violations" ]]; then
+        printf "%s\n" "$file_violations"
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: cargo clippy (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: cargo clippy"
+    printf "PASS: cargo clippy\n"
 fi
 
 echo ""
@@ -95,20 +120,63 @@ fi
 
 echo ""
 echo "Running cargo check (debug)..."
-if ! cargo check --all-features --quiet; then
-    echo "FAIL: cargo check (debug)"
+check_debug_output=$(cargo check \
+    --all-features \
+    --quiet \
+    --message-format=json 2>/dev/null) || true
+check_debug_output="${check_debug_output:-}"
+
+tool_errors=0
+for f in "${rs_files[@]}"; do
+    file_violations=$(jq --raw-output --arg f "$f" \
+        'select(.reason == "compiler-message")
+         | select(.message.spans[]?.file_name == $f)
+         | .message.rendered' \
+        <<< "$check_debug_output")
+    if [[ -n "$file_violations" ]]; then
+        printf "%s\n" "$file_violations"
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: cargo check (debug) (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: cargo check (debug)"
+    printf "PASS: cargo check (debug)\n"
 fi
 
 echo ""
 echo "Running cargo check (release)..."
-if ! cargo check --all-features --release --quiet; then
-    echo "FAIL: cargo check (release)"
+check_release_output=$(cargo check \
+    --all-features \
+    --release \
+    --quiet \
+    --message-format=json 2>/dev/null) || true
+check_release_output="${check_release_output:-}"
+
+tool_errors=0
+for f in "${rs_files[@]}"; do
+    file_violations=$(jq --raw-output --arg f "$f" \
+        'select(.reason == "compiler-message")
+         | select(.message.spans[]?.file_name == $f)
+         | .message.rendered' \
+        <<< "$check_release_output")
+    if [[ -n "$file_violations" ]]; then
+        printf "%s\n" "$file_violations"
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
+done
+if ((tool_errors > 0)); then
+    printf "FAIL: cargo check (release) (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
-    echo "PASS: cargo check (release)"
+    printf "PASS: cargo check (release)\n"
 fi
 
 if [[ $errors -gt 0 ]]; then

@@ -2,7 +2,7 @@
 # GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
 # Build and prune images using Buildah and GitHub Container Registry API.
 
-name: Buildah Image CI
+name: Build, Scan, and Prune
 
 on:
   workflow_call:

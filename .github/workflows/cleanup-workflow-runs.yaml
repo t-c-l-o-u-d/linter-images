@@ -2,7 +2,7 @@
 # GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
 # Cleanup old GitHub Actions workflow runs and caches.
 
-name: Cleanup Workflow Runs
+name: Cleanup Runs and Caches
 
 on:
   schedule:

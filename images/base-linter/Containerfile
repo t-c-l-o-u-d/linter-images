@@ -20,10 +20,11 @@ RUN pacman --sync --refresh --sysupgrade --noconfirm
 
 # install shared utilities
 RUN pacman --sync --refresh --noconfirm \
+    bash \
+    diffutils \
     figlet \
     git \
-    diffutils \
-    bash
+    jq
 
 # clean up pacman cache
 RUN pacman --sync --clean --clean --noconfirm

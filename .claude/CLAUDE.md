@@ -64,9 +64,11 @@ ghcr.io via GitHub Actions.
   summary (`PASS: toolname` or
   `FAIL: toolname (N file(s))`). Fix scripts must
   print each file path before processing it.
-  Project-level tools (cargo, ansible-lint, mypy)
-  that cannot run per-file must list all files before
-  the tool runs.
+  Project-level tools (cargo, mypy) that cannot run
+  per-file must list all files before the tool runs.
+  Tools with structured output (ansible-lint) should
+  run once and parse output for per-file PASS/FAIL
+  results.
 
 ### Packages
 
@@ -96,6 +98,13 @@ hook runs `bash linter-aio.bash fix` then
 `bash linter-aio.bash lint` automatically on every
 commit. To lint manually, use `bash linter-aio.bash lint`.
 
+## Building images
+
+Never build images locally. When touching anything in
+an image directory, commit, push, then trigger
+`gh workflow run main.yaml` and wait ~6 minutes for
+CI to build.
+
 ## Shell commands
 
 Run all commands directly from the repo root
@@ -103,6 +112,11 @@ Run all commands directly from the repo root
 Never use `git -C <path>` or prefix commands with
 absolute paths — the working directory is already
 the repo root.
+
+## Research
+
+Always check `--help` and `man` pages locally before
+consulting web documentation.
 
 ## Git
 

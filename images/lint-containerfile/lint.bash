@@ -6,9 +6,18 @@ set -euo pipefail
 source /usr/local/lib/linter-header.bash
 header
 
-mapfile -t containerfiles < <(git ls-files \
+# find Containerfiles/Dockerfiles, skip files with template syntax
+all_containerfiles=()
+mapfile -t all_containerfiles < <(git ls-files \
     'Containerfile' 'Containerfile.*' 'Dockerfile' 'Dockerfile.*' \
     '**/Containerfile' '**/Containerfile.*' '**/Dockerfile' '**/Dockerfile.*')
+containerfiles=()
+for f in "${all_containerfiles[@]}"; do
+    if grep --quiet --extended-regexp '\{\{|\{%|<%' "$f"; then
+        continue
+    fi
+    containerfiles+=("$f")
+done
 
 if [[ ${#containerfiles[@]} -eq 0 ]]; then
     echo "No Containerfiles found, skipping."

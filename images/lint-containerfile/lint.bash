@@ -6,16 +6,16 @@ set -euo pipefail
 source /usr/local/lib/linter-header.bash
 header
 
-# find Containerfiles/Dockerfiles, skip files with template syntax
+# find Containerfiles/Dockerfiles, skip template extensions
 all_containerfiles=()
 mapfile -t all_containerfiles < <(git ls-files \
     'Containerfile' 'Containerfile.*' 'Dockerfile' 'Dockerfile.*' \
     '**/Containerfile' '**/Containerfile.*' '**/Dockerfile' '**/Dockerfile.*')
 containerfiles=()
 for f in "${all_containerfiles[@]}"; do
-    if grep --quiet --extended-regexp '\{\{|\{%|<%' "$f"; then
-        continue
-    fi
+    case "${f##*.}" in
+        j2|gotemplate|erb|tpl|tmpl) continue ;;
+    esac
     containerfiles+=("$f")
 done
 

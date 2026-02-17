@@ -16,6 +16,7 @@ RUN pacman --sync --refresh --noconfirm \
 RUN pacman --sync --clean --clean --noconfirm
 
 # redirect build artifacts out of the (read-only) workspace
+ENV CARGO_HOME=/tmp/.cargo
 ENV CARGO_TARGET_DIR=/tmp/target
 ENV LINTER_IMAGE=lint-rust
 

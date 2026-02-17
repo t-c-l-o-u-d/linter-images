@@ -18,6 +18,7 @@ COPY lint.bash /usr/local/bin/lint
 COPY fix.bash /usr/local/bin/fix
 RUN chmod +x /usr/local/bin/lint /usr/local/bin/fix
 
+ENV RUFF_CACHE_DIR=/tmp/.ruff_cache
 ENV LINTER_IMAGE=lint-python
 
 WORKDIR /workspace

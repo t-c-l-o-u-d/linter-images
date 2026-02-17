@@ -64,12 +64,26 @@ if [[ -f .linter/mypy.ini ]]; then
 elif [[ -f mypy.ini ]]; then
     mypy_args+=(--config-file mypy.ini)
 fi
-printf "  Files:\n"
+
+mypy_output=$(mypy "${mypy_args[@]}" --output json \
+    "${py_files[@]}" 2>/dev/null) || true
+mypy_output="${mypy_output:-}"
+
+tool_errors=0
 for f in "${py_files[@]}"; do
-    printf "    %s\n" "$f"
+    file_violations=$(jq --raw-output --arg f "$f" \
+        'select(.file == $f) | "\(.file):\(.line):\(.column): \(.severity): \(.message) [\(.code)]"' \
+        <<< "$mypy_output")
+    if [[ -n "$file_violations" ]]; then
+        printf "%s\n" "$file_violations"
+        printf "  FAIL: %s\n" "$f"
+        tool_errors=$((tool_errors + 1))
+    else
+        printf "  PASS: %s\n" "$f"
+    fi
 done
-if ! mypy "${mypy_args[@]}" "${py_files[@]}"; then
-    printf "FAIL: mypy\n"
+if ((tool_errors > 0)); then
+    printf "FAIL: mypy (%d file(s))\n" "$tool_errors"
     errors=$((errors + 1))
 else
     printf "PASS: mypy\n"

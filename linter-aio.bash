@@ -675,7 +675,7 @@ EOF
                 echo "FAIL: ${img}"
                 errors=$((errors + 1))
             fi
-            file_fails=$(grep --count --extended-regexp '^[[:space:]]+FAIL: ' "$container_log" 2>/dev/null || echo 0)
+            file_fails=$(grep --count --extended-regexp '^[[:space:]]+FAIL: ' "$container_log" 2>/dev/null) || file_fails=0
             total_file_failures=$((total_file_failures + file_fails))
         done
         rm --force "$container_log"

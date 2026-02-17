@@ -50,3 +50,18 @@ jobs:
       IMAGE_NAME: ${{ matrix.IMAGE_NAME }}
       IMAGE_DIR: ${{ matrix.IMAGE_DIR }}
     secrets: inherit
+
+  cleanup-caches:
+    name: Cleanup Caches
+    if: always()
+    needs: [build-base, build-linters]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Delete all caches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: .github/scripts/cleanup-caches.bash

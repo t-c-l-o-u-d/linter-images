@@ -80,6 +80,7 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM'
           trivyignores: '.linter/.trivyignore'
+          cache: 'false'
       - name: Scan Container Image (grype)
         uses: anchore/scan-action@v7.3.2
         env:

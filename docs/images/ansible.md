@@ -14,7 +14,7 @@ match wins):
 If found, the linter runs
 `ansible-galaxy collection install` before
 `ansible-lint`. Collections install to
-`~/.ansible/collections/` inside the container, so the
+`/tmp/.ansible/collections/` (via `ANSIBLE_HOME`), so the
 workspace mount can stay read-only.
 
 ### Example requirements.yml

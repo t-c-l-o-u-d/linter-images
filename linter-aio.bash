@@ -203,13 +203,13 @@ detect_images() {
     local -a pat_dir=()
     local -a pat_glob=()
     local -A needed=()
-    local -a undetected=()
+    local -A undetected=()
     local -A scores=()
     local -A max_w=()
     local rule image match_type pattern entry
-    local f fpath base ext img mime xdg_mime shebang interp desc context sample
+    local f fpath base ext img mime xdg_mime shebang interp context sample
     local env_arg rule_ctx rule_linter rule_pattern
-    local winner best_score best_max_w linter score
+    local winner best_score best_max_w linter score hint hint_score
     local has_mimetype=0
 
     # check if mimetype (perl-file-mimeinfo) is available
@@ -375,8 +375,19 @@ detect_images() {
 
         if [[ -n "$winner" && "$winner" != "skip" ]]; then
             needed["$winner"]=1
-        elif [[ ${#scores[@]} -eq 0 ]]; then
-            undetected+=("$f")
+        else
+            # find best non-skip candidate as a hint
+            hint=""
+            hint_score=0
+            for linter in "${!scores[@]}"; do
+                if [[ "$linter" != "skip" ]] && (( ${scores[$linter]} > hint_score )); then
+                    hint="$linter"
+                    hint_score=${scores[$linter]}
+                fi
+            done
+            if [[ ${#scores[@]} -eq 0 || -n "$hint" ]]; then
+                undetected["$f"]="$hint"
+            fi
         fi
     done < <(git -c core.quotePath=false ls-files --full-name "$WORKTREE")
 
@@ -384,9 +395,12 @@ detect_images() {
     if [[ ${#undetected[@]} -gt 0 ]]; then
         echo "" >&2
         echo "Note: could not detect a linter for these files:" >&2
-        while IFS= read -r desc; do
-            echo "  - ${desc}" >&2
-        done < <(printf '%s\n' "${undetected[@]}" | sort)
+        while IFS= read -r f; do
+            echo "  - ${f}" >&2
+            if [[ -n "${undetected[$f]}" ]]; then
+                echo "    - Maybe ${undetected[$f]}?" >&2
+            fi
+        done < <(printf '%s\n' "${!undetected[@]}" | sort)
     fi
 
     # return sorted list of needed images

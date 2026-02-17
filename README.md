@@ -1,5 +1,10 @@
 # linter-images
 
+[![Main](https://github.com/t-c-l-o-u-d/linter-images/actions/workflows/main.yaml/badge.svg)](https://github.com/t-c-l-o-u-d/linter-images/actions/workflows/main.yaml)
+[![Check Hadolint Update](https://github.com/t-c-l-o-u-d/linter-images/actions/workflows/check-hadolint-update.yaml/badge.svg)](https://github.com/t-c-l-o-u-d/linter-images/actions/workflows/check-hadolint-update.yaml)
+[![CVE Review](https://github.com/t-c-l-o-u-d/linter-images/actions/workflows/cve-review.yaml/badge.svg)](https://github.com/t-c-l-o-u-d/linter-images/actions/workflows/cve-review.yaml)
+[![Cleanup Runs and Caches](https://github.com/t-c-l-o-u-d/linter-images/actions/workflows/cleanup-runs-and-caches.yaml/badge.svg)](https://github.com/t-c-l-o-u-d/linter-images/actions/workflows/cleanup-runs-and-caches.yaml)
+
 OCI linter images built on Arch Linux. Pull them, mount
 your repo, done. Works with `podman` (preferred) or `docker`.
 

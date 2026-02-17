@@ -16,3 +16,6 @@ CVE-2026-2327
 
 # lint-vim: jaraco.context — upstream Arch package
 CVE-2026-23949
+
+# lint-css (stylelint), lint-javascript (eslint): ajv ReDoS — upstream Arch package, fixed in 8.18.0
+CVE-2025-69873

@@ -118,6 +118,11 @@ bash ~/git/linter-images/linter-aio.bash lint
 The script auto-detects the worktree via `git rev-parse`.
 It does not accept a directory argument.
 
+When changing `linter-aio.bash`, always test it against
+an external project before committing to catch runtime
+errors that the pre-commit hook (which only lints this
+repo) would miss.
+
 ## Building images
 
 Never build images locally. When touching anything in

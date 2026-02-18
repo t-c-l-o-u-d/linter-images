@@ -535,7 +535,8 @@ ansible project?" cannot be done per-file — it requires examining
 directory structure.
 
 Project-level detection runs BEFORE the per-file scoring loop and
-directly adds images to the `needed` set:
+directly adds images to the `needed` set. Each match is also
+recorded in `LINTER_FILES` with a `(project: ...)` annotation:
 
 | Rule Type | Pattern | Image |
 | ----------- | --------- | ------- |
@@ -649,6 +650,21 @@ CONTENT_RULES=(
 Same as current. Extension, filename, and prefix patterns that each
 contribute W_EXT / W_FILE / W_PREFIX to the scoring.
 
+### Output Globals
+
+`detect_images()` communicates results through two global arrays
+instead of stdout (avoiding subshell loss of state):
+
+```bash
+declare -A LINTER_FILES=()   # linter → newline-separated file list
+declare -a DETECTED_IMAGES=() # sorted list of needed image names
+```
+
+`LINTER_FILES` is populated during detection so callers can display
+the exact file list associated with each linter. Project-level
+matches are annotated (e.g. `(project: roles/)`), and per-file
+matches record the file path.
+
 ## Implementation: Per-File Scoring Loop
 
 Pseudocode for the file walk inside `detect_images()`:
@@ -717,6 +733,7 @@ for each tracked file f:
         2. higher max_weight wins
     if winner exists and != skip:
         needed[winner] = 1
+        LINTER_FILES[winner] += f
     elif no votes at all:
         flag as unsupported
 ```

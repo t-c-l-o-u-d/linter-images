@@ -2,8 +2,6 @@
 
 ## aio script: route to existing linters
 
-- [x] Add `.bash`, `.sh` to detection rules (lint-bash)
-- [x] Add `.bashrc`, `.bash_profile` to detection rules (lint-bash)
 - [ ] Add `.network`, `.nspawn` to detection rules (lint-systemd)
       — verify `systemd-analyze verify` supports these subsystem configs
 - [ ] Fix extensionless file detection: dotfile paths like
@@ -12,10 +10,6 @@
 
 ## aio script: add to skip lists
 
-- [x] Skip extensions: `.mp3`, `.pdf`, `.bak`, `.crt`, `.pub`,
-      `.sixel`, `.bu`, `.build`, `.in`, `.gotemplate`, `.internal`,
-      `.webp`, `.locale`, `.placeholder`, `.j2`
-- [x] Skip filenames: `.ansible-lint`, `.yamllint`
 - [ ] Skip `.ssh/*`, `.config/git/*`, `.config/dunst/*`,
       `.config/sway/*`, extensionless `config`, `inventory`
       — these are dotfile configs, not project source code
@@ -33,3 +27,8 @@
 - [ ] OpenShift linting
 - [ ] Kustomize linting
 - [ ] Kubernetes linting
+- [ ] Go linting
+
+## Never lint
+
+- [ ] Key files `application/x-pem-file`

@@ -183,6 +183,10 @@ CONTENT_RULES=(
     "plain|lint-containerfile|^(RUN|COPY|ADD|CMD|ENTRYPOINT|EXPOSE|WORKDIR|ENV|ARG|LABEL)[[:space:]]"
 )
 
+# --- Per-linter file lists (populated by detect_images) ---
+declare -A LINTER_FILES=()
+declare -a DETECTED_IMAGES=()
+
 detect_runtime() {
     if command -v podman > /dev/null 2>&1; then
         echo "podman"
@@ -211,6 +215,7 @@ detect_images() {
     local env_arg rule_ctx rule_linter rule_pattern
     local winner best_score best_max_w linter score hint hint_score
     local has_mimetype=0
+    LINTER_FILES=()
 
     # check if mimetype (perl-file-mimeinfo) is available
     command -v mimetype > /dev/null 2>&1 && has_mimetype=1
@@ -229,11 +234,17 @@ detect_images() {
     # project-level detection (dir and glob rules)
     for entry in "${pat_dir[@]}"; do
         IFS='|' read -r image pattern <<< "$entry"
-        [[ -d "$WORKTREE/$pattern" ]] && needed["$image"]=1
+        if [[ -d "$WORKTREE/$pattern" ]]; then
+            needed["$image"]=1
+            LINTER_FILES["$image"]+=$'\n'"    (project: ${pattern}/)"
+        fi
     done
     for entry in "${pat_glob[@]}"; do
         IFS='|' read -r image pattern <<< "$entry"
-        git -c core.quotePath=false ls-files --full-name "$WORKTREE/$pattern" | grep --quiet . && needed["$image"]=1
+        if git -c core.quotePath=false ls-files --full-name "$WORKTREE/$pattern" | grep --quiet .; then
+            needed["$image"]=1
+            LINTER_FILES["$image"]+=$'\n'"    (project: ${pattern})"
+        fi
     done
 
     # single-pass file walk with per-file consensus scoring
@@ -375,6 +386,7 @@ detect_images() {
 
         if [[ -n "$winner" && "$winner" != "skip" ]]; then
             needed["$winner"]=1
+            LINTER_FILES["$winner"]+=$'\n'"    ${f}"
         else
             # find best non-skip candidate as a hint
             hint=""
@@ -403,8 +415,11 @@ detect_images() {
         done < <(printf '%s\n' "${!undetected[@]}" | sort)
     fi
 
-    # return sorted list of needed images
-    [[ ${#needed[@]} -gt 0 ]] && printf '%s\n' "${!needed[@]}" | sort
+    # store sorted list of needed images in global array
+    DETECTED_IMAGES=()
+    if [[ ${#needed[@]} -gt 0 ]]; then
+        mapfile -t DETECTED_IMAGES < <(printf '%s\n' "${!needed[@]}" | sort)
+    fi
 }
 
 run_container() {
@@ -463,7 +478,8 @@ install_hook() {
     local hook_path="${hooks_dir}/pre-commit"
 
     echo "Scanning workspace for file types..."
-    mapfile -t images < <(detect_images)
+    detect_images
+    images=("${DETECTED_IMAGES[@]}")
 
     if [[ ${#images[@]} -eq 0 ]]; then
         echo "No recognized file types found. Nothing to install."
@@ -473,7 +489,7 @@ install_hook() {
     echo ""
     echo "Detected linter images:"
     for img in "${images[@]}"; do
-        echo "  - ${img}"
+        echo "  - ${img}${LINTER_FILES[$img]:-}"
     done
 
     # build the hook script with targeted container commands
@@ -617,7 +633,8 @@ EOF
     echo ""
 
     echo "Scanning workspace for file types..."
-    mapfile -t images < <(detect_images)
+    detect_images
+    images=("${DETECTED_IMAGES[@]}")
 
     if [[ ${#images[@]} -eq 0 ]]; then
         echo "No recognized file types found."
@@ -627,7 +644,7 @@ EOF
     echo ""
     echo "Detected linter images:"
     for img in "${images[@]}"; do
-        echo "  - ${img}"
+        echo "  - ${img}${LINTER_FILES[$img]:-}"
     done
 
     local errors=0

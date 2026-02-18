@@ -187,16 +187,16 @@ Content heuristics only run for ambiguous formats:
 These patterns are searched in the first 50 lines / 4 KB of the
 file. Each match adds W_CONTENT (3) to `lint-ansible`.
 
-| Pattern                      | Rationale                       |
-| ---------------------------- | ------------------------------- |
-| `^\s*-?\s*become\s*:`        | Privilege escalation. Unique.   |
-| `^\s*-?\s*gather_facts\s*:`  | Fact gathering. Unique.         |
-| `^\s*-?\s*tasks\s*:`         | Task list. Rare outside ansible.|
-| `^\s*-?\s*handlers\s*:`      | Handler declaration. Unique.    |
+| Pattern | Rationale |
+| --- | --- |
+| `^[[:space:]]*-?[[:space:]]*become[[:space:]]*:` | Privilege escalation. Unique. |
+| `^[[:space:]]*-?[[:space:]]*gather_facts[[:space:]]*:` | Fact gathering. Unique. |
+| `^[[:space:]]*-?[[:space:]]*tasks[[:space:]]*:` | Task list. Rare outside ansible. |
+| `^[[:space:]]*-?[[:space:]]*handlers[[:space:]]*:` | Handler declaration. Unique. |
 
 The `-?` in each pattern handles YAML list items (`- tasks:` vs
-`tasks:`). The `\s*:` ensures we match YAML keys, not values or
-comments.
+`tasks:`). The `[[:space:]]*:` ensures we match YAML keys, not
+values or comments.
 
 **Why these four keywords?** They were chosen for specificity:
 
@@ -231,11 +231,11 @@ These patterns detect Dockerfile syntax in files that MIME
 identifies as `text/plain` (i.e., files without a shebang or
 other identifying magic bytes).
 
-- `^FROM\s+\S` — The FROM directive. Every Containerfile starts with
-  or contains at least one FROM. Rare in natural language text at the
-  start of a line.
-- `^(RUN|COPY|ADD|...)\s` — Other Dockerfile directives. A real
-  Containerfile will have multiple of these. A text file randomly
+- `^FROM[[:space:]]+[^[:space:]]` — The FROM directive. Every
+  Containerfile starts with or contains at least one FROM. Rare in
+  natural language text at the start of a line.
+- `^(RUN|COPY|ADD|...)[[:space:]]` — Other Dockerfile directives. A
+  real Containerfile will have multiple of these. A text file randomly
   containing "FROM something" is unlikely to also contain
   "RUN something".
 
@@ -636,12 +636,12 @@ declare -A SHEBANG_RULES=(
 
 ```bash
 CONTENT_RULES=(
-    "yaml|lint-ansible|^\\s*-?\\s*become\\s*:"
-    "yaml|lint-ansible|^\\s*-?\\s*gather_facts\\s*:"
-    "yaml|lint-ansible|^\\s*-?\\s*tasks\\s*:"
-    "yaml|lint-ansible|^\\s*-?\\s*handlers\\s*:"
-    "plain|lint-containerfile|^FROM\\s+\\S"
-    "plain|lint-containerfile|^(RUN|COPY|ADD|CMD|ENTRYPOINT|EXPOSE|WORKDIR|ENV|ARG|LABEL)\\s"
+    "yaml|lint-ansible|^[[:space:]]*-?[[:space:]]*become[[:space:]]*:"
+    "yaml|lint-ansible|^[[:space:]]*-?[[:space:]]*gather_facts[[:space:]]*:"
+    "yaml|lint-ansible|^[[:space:]]*-?[[:space:]]*tasks[[:space:]]*:"
+    "yaml|lint-ansible|^[[:space:]]*-?[[:space:]]*handlers[[:space:]]*:"
+    "plain|lint-containerfile|^FROM[[:space:]]+[^[:space:]]"
+    "plain|lint-containerfile|^(RUN|COPY|ADD|CMD|ENTRYPOINT|EXPOSE|WORKDIR|ENV|ARG|LABEL)[[:space:]]"
 )
 ```
 

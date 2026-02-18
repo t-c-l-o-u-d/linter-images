@@ -17,7 +17,9 @@ fi
 
 if [[ -n "$req_file" ]]; then
     echo "Installing Galaxy collections from ${req_file}..."
-    ansible-galaxy collection install --requirements-file "$req_file"
+    ansible-galaxy collection install \
+        --collections-path /tmp/.ansible/collections \
+        --requirements-file "$req_file"
 fi
 
 mapfile -t ansible_files < <(git ls-files '*.yml' '*.yaml')

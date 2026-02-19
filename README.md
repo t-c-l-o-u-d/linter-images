@@ -45,7 +45,7 @@ hook setup, and per-image references.
 
 ## Linter Config Overrides
 
-The linters look for config files in the repository root or `.linter/`.
+The linters look for config files in `.linter/`, `.linters/`, or the repository root.
 
 ---
 

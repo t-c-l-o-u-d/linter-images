@@ -19,6 +19,8 @@ echo "Running stylelint..."
 sl_args=()
 if [[ -f .linter/.stylelintrc.json ]]; then
     sl_args+=(--config .linter/.stylelintrc.json)
+elif [[ -f .linters/stylelintrc.json ]]; then
+    sl_args+=(--config .linters/stylelintrc.json)
 elif [[ -f .stylelintrc.json ]]; then
     sl_args+=(--config .stylelintrc.json)
 else
@@ -52,6 +54,8 @@ else
     biome_args=()
     if [[ -f .linter/biome.json ]]; then
         biome_args+=(--config-path .linter)
+    elif [[ -f .linters/biome.json ]]; then
+        biome_args+=(--config-path .linters)
     elif [[ -f biome.json ]]; then
         biome_args+=(--config-path .)
     fi

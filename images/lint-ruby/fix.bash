@@ -22,6 +22,8 @@ rubocop_args=(
 )
 if [[ -f .linter/.rubocop.yml ]]; then
     rubocop_args+=(--config .linter/.rubocop.yml)
+elif [[ -f .linters/rubocop.yml ]]; then
+    rubocop_args+=(--config .linters/rubocop.yml)
 elif [[ -f .rubocop.yml ]]; then
     rubocop_args+=(--config .rubocop.yml)
 fi

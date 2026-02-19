@@ -45,6 +45,8 @@ echo "Running shellcheck..."
 sc_args=(--external-sources)
 if [[ -f .linter/.shellcheckrc ]]; then
     sc_args+=(--rcfile .linter/.shellcheckrc)
+elif [[ -f .linters/shellcheckrc ]]; then
+    sc_args+=(--rcfile .linters/shellcheckrc)
 elif [[ -f .shellcheckrc ]]; then
     sc_args+=(--rcfile .shellcheckrc)
 fi

@@ -5,10 +5,11 @@ against a JSON schema with qsv if a schema file exists.
 
 ## Configuration
 
-| Priority | Path                      | Tool         |
-| -------- | ------------------------- | ------------ |
-| 1        | `.linter/csv-schema.json` | qsv validate |
-| 2        | `csv-schema.json`         | qsv validate |
+| Priority | Path                       | Tool         |
+| -------- | -------------------------- | ------------ |
+| 1        | `.linter/csv-schema.json`  | qsv validate |
+| 2        | `.linters/csv-schema.json` | qsv validate |
+| 3        | `csv-schema.json`          | qsv validate |
 
 ## Usage
 

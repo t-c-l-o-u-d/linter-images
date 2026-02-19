@@ -17,6 +17,8 @@ echo "Running ruff check --fix..."
 ruff_args=()
 if [[ -f .linter/ruff.toml ]]; then
     ruff_args+=(--config .linter/ruff.toml)
+elif [[ -f .linters/ruff.toml ]]; then
+    ruff_args+=(--config .linters/ruff.toml)
 elif [[ -f ruff.toml ]]; then
     ruff_args+=(--config ruff.toml)
 fi

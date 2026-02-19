@@ -19,6 +19,8 @@ echo "Running yamllint..."
 yamllint_args=()
 if [[ -f .linter/.yamllint.yaml ]]; then
     yamllint_args+=(--config-file .linter/.yamllint.yaml)
+elif [[ -f .linters/yamllint ]]; then
+    yamllint_args+=(--config-file .linters/yamllint)
 elif [[ -f .yamllint.yaml ]]; then
     yamllint_args+=(--config-file .yamllint.yaml)
 fi

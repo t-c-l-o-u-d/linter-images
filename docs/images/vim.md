@@ -7,7 +7,8 @@ Runs vint on `*.vim` files and files named `vimrc`.
 | Priority | Path                    | Tool |
 | -------- | ----------------------- | ---- |
 | 1        | `.linter/.vintrc.yaml`  | vint |
-| 2        | `.vintrc.yaml`          | vint |
+| 2        | `.linters/vintrc.yaml`  | vint |
+| 3        | `.vintrc.yaml`          | vint |
 
 ## Usage
 

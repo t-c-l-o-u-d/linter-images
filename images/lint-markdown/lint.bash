@@ -19,6 +19,8 @@ echo "Running markdownlint-cli2..."
 mdl_args=()
 if [[ -f .linter/.markdownlint-cli2.yaml ]]; then
     mdl_args+=(--config .linter/.markdownlint-cli2.yaml)
+elif [[ -f .linters/markdownlint-cli2.yaml ]]; then
+    mdl_args+=(--config .linters/markdownlint-cli2.yaml)
 elif [[ -f .markdownlint-cli2.yaml ]]; then
     mdl_args+=(--config .markdownlint-cli2.yaml)
 fi

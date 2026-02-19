@@ -8,11 +8,14 @@ bandit (security analysis) on `*.py` files.
 | Priority | Path                 | Tool   |
 | -------- | -------------------- | ------ |
 | 1        | `.linter/ruff.toml`  | ruff   |
-| 2        | `ruff.toml`          | ruff   |
+| 2        | `.linters/ruff.toml` | ruff   |
+| 3        | `ruff.toml`          | ruff   |
 | 1        | `.linter/mypy.ini`   | mypy   |
-| 2        | `mypy.ini`           | mypy   |
+| 2        | `.linters/mypy.ini`  | mypy   |
+| 3        | `mypy.ini`           | mypy   |
 | 1        | `.linter/.bandit`    | bandit |
-| 2        | `.bandit`            | bandit |
+| 2        | `.linters/bandit`    | bandit |
+| 3        | `.bandit`            | bandit |
 
 ## Usage
 

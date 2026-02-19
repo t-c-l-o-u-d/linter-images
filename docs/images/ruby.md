@@ -9,7 +9,8 @@ and `Rakefile` files.
 | Priority | Path                    | Tool    |
 | -------- | ----------------------- | ------- |
 | 1        | `.linter/.rubocop.yml`  | rubocop |
-| 2        | `.rubocop.yml`          | rubocop |
+| 2        | `.linters/rubocop.yml`  | rubocop |
+| 3        | `.rubocop.yml`          | rubocop |
 
 ## Usage
 

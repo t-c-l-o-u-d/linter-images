@@ -41,6 +41,8 @@ echo "Running yamlfmt..."
 yamlfmt_args=()
 if [[ -f .linter/.yamlfmt ]]; then
     yamlfmt_args+=(-conf .linter/.yamlfmt)
+elif [[ -f .linters/yamlfmt ]]; then
+    yamlfmt_args+=(-conf .linters/yamlfmt)
 elif [[ -f .yamlfmt ]]; then
     yamlfmt_args+=(-conf .yamlfmt)
 fi

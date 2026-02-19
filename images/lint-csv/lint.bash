@@ -35,6 +35,8 @@ fi
 schema_file=""
 if [[ -f .linter/csv-schema.json ]]; then
     schema_file=".linter/csv-schema.json"
+elif [[ -f .linters/csv-schema.json ]]; then
+    schema_file=".linters/csv-schema.json"
 elif [[ -f csv-schema.json ]]; then
     schema_file="csv-schema.json"
 fi

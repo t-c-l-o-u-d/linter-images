@@ -19,6 +19,8 @@ echo "Running ruff check..."
 ruff_args=()
 if [[ -f .linter/ruff.toml ]]; then
     ruff_args+=(--config .linter/ruff.toml)
+elif [[ -f .linters/ruff.toml ]]; then
+    ruff_args+=(--config .linters/ruff.toml)
 elif [[ -f ruff.toml ]]; then
     ruff_args+=(--config ruff.toml)
 fi
@@ -61,6 +63,8 @@ echo "Running mypy..."
 mypy_args=(--strict)
 if [[ -f .linter/mypy.ini ]]; then
     mypy_args+=(--config-file .linter/mypy.ini)
+elif [[ -f .linters/mypy.ini ]]; then
+    mypy_args+=(--config-file .linters/mypy.ini)
 elif [[ -f mypy.ini ]]; then
     mypy_args+=(--config-file mypy.ini)
 fi
@@ -94,6 +98,8 @@ echo "Running bandit..."
 bandit_args=(--quiet)
 if [[ -f .linter/.bandit ]]; then
     bandit_args+=(--configfile .linter/.bandit)
+elif [[ -f .linters/bandit ]]; then
+    bandit_args+=(--configfile .linters/bandit)
 elif [[ -f .bandit ]]; then
     bandit_args+=(--configfile .bandit)
 fi

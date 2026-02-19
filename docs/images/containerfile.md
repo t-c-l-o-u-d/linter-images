@@ -8,7 +8,8 @@ patterns.
 | Priority | Path                     | Tool     |
 | -------- | ------------------------ | -------- |
 | 1        | `.linter/.hadolint.yaml` | hadolint |
-| 2        | `.hadolint.yaml`         | hadolint |
+| 2        | `.linters/hadolint.yaml` | hadolint |
+| 3        | `.hadolint.yaml`         | hadolint |
 
 ## Usage
 

@@ -17,6 +17,8 @@ echo "Running tidy (syntax check)..."
 tidy_args=(-quiet -errors)
 if [[ -f .linter/.tidyrc ]]; then
     tidy_args+=(-config .linter/.tidyrc)
+elif [[ -f .linters/tidyrc ]]; then
+    tidy_args+=(-config .linters/tidyrc)
 elif [[ -f .tidyrc ]]; then
     tidy_args+=(-config .tidyrc)
 fi

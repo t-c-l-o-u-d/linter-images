@@ -9,12 +9,14 @@ as the default ruleset.
 
 ## Configuration
 
-| Priority | Path                        | Tool      |
-| -------- | --------------------------- | --------- |
-| 1        | `.linter/.stylelintrc.json` | stylelint |
-| 2        | `.stylelintrc.json`         | stylelint |
-| 1        | `.linter/biome.json`        | biome     |
-| 2        | `biome.json`                | biome     |
+| Priority | Path                         | Tool      |
+| -------- | ---------------------------- | --------- |
+| 1        | `.linter/.stylelintrc.json`  | stylelint |
+| 2        | `.linters/stylelintrc.json`  | stylelint |
+| 3        | `.stylelintrc.json`          | stylelint |
+| 1        | `.linter/biome.json`         | biome     |
+| 2        | `.linters/biome.json`        | biome     |
+| 3        | `biome.json`                 | biome     |
 
 ## Usage
 

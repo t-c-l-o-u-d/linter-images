@@ -9,6 +9,8 @@ header
 req_file=""
 if [[ -f .linter/requirements.yml ]]; then
     req_file=".linter/requirements.yml"
+elif [[ -f .linters/requirements.yml ]]; then
+    req_file=".linters/requirements.yml"
 elif [[ -f collections/requirements.yml ]]; then
     req_file="collections/requirements.yml"
 elif [[ -f requirements.yml ]]; then
@@ -35,6 +37,8 @@ echo "Running ansible-lint..."
 al_args=()
 if [[ -f .linter/.ansible-lint ]]; then
     al_args+=(--config-file .linter/.ansible-lint)
+elif [[ -f .linters/ansible-lint ]]; then
+    al_args+=(--config-file .linters/ansible-lint)
 elif [[ -f .ansible-lint ]]; then
     al_args+=(--config-file .ansible-lint)
 fi

@@ -5,12 +5,14 @@ files.
 
 ## Configuration
 
-| Priority | Path                        | Tool   |
-| -------- | --------------------------- | ------ |
-| 1        | `.linter/eslint.config.js`  | eslint |
-| 2        | `eslint.config.js`          | eslint |
-| 1        | `.linter/biome.json`        | biome  |
-| 2        | `biome.json`                | biome  |
+| Priority | Path                         | Tool   |
+| -------- | ---------------------------- | ------ |
+| 1        | `.linter/eslint.config.js`   | eslint |
+| 2        | `.linters/eslint.config.js`  | eslint |
+| 3        | `eslint.config.js`           | eslint |
+| 1        | `.linter/biome.json`         | biome  |
+| 2        | `.linters/biome.json`        | biome  |
+| 3        | `biome.json`                 | biome  |
 
 ## Usage
 

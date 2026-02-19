@@ -16,9 +16,11 @@ still checks all YAML files for defense in depth.
 | Priority | Path                      | Tool     |
 | -------- | ------------------------- | -------- |
 | 1        | `.linter/.yamlfmt`        | yamlfmt  |
-| 2        | `.yamlfmt`                | yamlfmt  |
+| 2        | `.linters/yamlfmt`        | yamlfmt  |
+| 3        | `.yamlfmt`                | yamlfmt  |
 | 1        | `.linter/.yamllint.yaml`  | yamllint |
-| 2        | `.yamllint.yaml`          | yamllint |
+| 2        | `.linters/yamllint`       | yamllint |
+| 3        | `.yamllint.yaml`          | yamllint |
 
 ## Usage
 

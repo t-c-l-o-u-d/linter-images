@@ -30,6 +30,8 @@ echo "Running hadolint..."
 hadolint_args=()
 if [[ -f .linter/.hadolint.yaml ]]; then
     hadolint_args+=(--config .linter/.hadolint.yaml)
+elif [[ -f .linters/hadolint.yaml ]]; then
+    hadolint_args+=(--config .linters/hadolint.yaml)
 elif [[ -f .hadolint.yaml ]]; then
     hadolint_args+=(--config .hadolint.yaml)
 fi

@@ -8,8 +8,9 @@ for a `requirements.yml` file in these locations (first
 match wins):
 
 1. `.linter/requirements.yml`
-2. `collections/requirements.yml`
-3. `requirements.yml`
+2. `.linters/requirements.yml`
+3. `collections/requirements.yml`
+4. `requirements.yml`
 
 If found, the linter runs
 `ansible-galaxy collection install` before
@@ -31,10 +32,11 @@ collections:
 ansible-lint config is resolved the same way as other
 linter images:
 
-| Priority | Path                    |
-| -------- | ----------------------- |
-| 1        | `.linter/.ansible-lint` |
-| 2        | `.ansible-lint`         |
+| Priority | Path                     |
+| -------- | ------------------------ |
+| 1        | `.linter/.ansible-lint`  |
+| 2        | `.linters/ansible-lint`  |
+| 3        | `.ansible-lint`          |
 
 ## Usage
 

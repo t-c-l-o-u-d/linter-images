@@ -21,6 +21,9 @@ vint_dir="/workspace"
 if [[ -f .linter/.vintrc.yaml ]] && [[ ! -f .vintrc.yaml ]]; then
     vint_dir="$(mktemp --directory)"
     cp .linter/.vintrc.yaml "${vint_dir}/.vintrc.yaml"
+elif [[ -f .linters/vintrc.yaml ]] && [[ ! -f .vintrc.yaml ]]; then
+    vint_dir="$(mktemp --directory)"
+    cp .linters/vintrc.yaml "${vint_dir}/.vintrc.yaml"
 fi
 
 echo "Running vint..."

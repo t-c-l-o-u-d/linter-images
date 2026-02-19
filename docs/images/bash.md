@@ -9,7 +9,8 @@ shebangs and verifying with `file --mime-type`.
 | Priority | Path                     | Tool       |
 | -------- | ------------------------ | ---------- |
 | 1        | `.linter/.shellcheckrc`  | shellcheck |
-| 2        | `.shellcheckrc`          | shellcheck |
+| 2        | `.linters/shellcheckrc`  | shellcheck |
+| 3        | `.shellcheckrc`          | shellcheck |
 
 ## Usage
 

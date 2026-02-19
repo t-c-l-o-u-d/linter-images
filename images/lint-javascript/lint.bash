@@ -19,6 +19,8 @@ echo "Running eslint..."
 es_args=()
 if [[ -f .linter/eslint.config.js ]]; then
     es_args+=(--config .linter/eslint.config.js)
+elif [[ -f .linters/eslint.config.js ]]; then
+    es_args+=(--config .linters/eslint.config.js)
 elif [[ -f eslint.config.js ]]; then
     es_args+=(--config eslint.config.js)
 fi
@@ -43,6 +45,8 @@ echo "Running biome check..."
 biome_args=()
 if [[ -f .linter/biome.json ]]; then
     biome_args+=(--config-path .linter)
+elif [[ -f .linters/biome.json ]]; then
+    biome_args+=(--config-path .linters)
 elif [[ -f biome.json ]]; then
     biome_args+=(--config-path .)
 fi

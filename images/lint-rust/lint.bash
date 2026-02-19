@@ -101,6 +101,8 @@ echo "Running cargo deny..."
 deny_args=()
 if [[ -f .linter/deny.toml ]]; then
     deny_args+=(--config .linter/deny.toml)
+elif [[ -f .linters/deny.toml ]]; then
+    deny_args+=(--config .linters/deny.toml)
 fi
 if ! cargo deny "${deny_args[@]}" check advisories bans sources; then
     echo "FAIL: cargo deny"

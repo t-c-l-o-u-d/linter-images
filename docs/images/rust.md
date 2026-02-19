@@ -10,9 +10,10 @@ automatically.
 
 ## Configuration
 
-| Priority | Path                 | Tool       |
-| -------- | -------------------- | ---------- |
-| 1        | `.linter/deny.toml`  | cargo deny |
+| Priority | Path                  | Tool       |
+| -------- | --------------------- | ---------- |
+| 1        | `.linter/deny.toml`   | cargo deny |
+| 2        | `.linters/deny.toml`  | cargo deny |
 
 ## Usage
 

@@ -7,7 +7,8 @@ Runs tidy in syntax-check mode on `*.html` files.
 | Priority | Path               | Tool |
 | -------- | ------------------ | ---- |
 | 1        | `.linter/.tidyrc`  | tidy |
-| 2        | `.tidyrc`          | tidy |
+| 2        | `.linters/tidyrc`  | tidy |
+| 3        | `.tidyrc`          | tidy |
 
 ## Usage
 

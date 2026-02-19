@@ -20,7 +20,11 @@ mdl_args=()
 if [[ -f .linter/.markdownlint-cli2.yaml ]]; then
     mdl_args+=(--config .linter/.markdownlint-cli2.yaml)
 elif [[ -f .linters/markdownlint-cli2.yaml ]]; then
-    mdl_args+=(--config .linters/markdownlint-cli2.yaml)
+    # markdownlint-cli2 requires config filenames to match its dotfile
+    # convention; copy to a temp file with the expected name
+    mdl_config="$(mktemp --directory)/.markdownlint-cli2.yaml"
+    cp .linters/markdownlint-cli2.yaml "$mdl_config"
+    mdl_args+=(--config "$mdl_config")
 elif [[ -f .markdownlint-cli2.yaml ]]; then
     mdl_args+=(--config .markdownlint-cli2.yaml)
 fi

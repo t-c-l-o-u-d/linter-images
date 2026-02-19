@@ -7,7 +7,8 @@ USER root
 # install linter packages
 RUN pacman --sync --refresh --noconfirm \
     jq \
-    python
+    python \
+    python-json5
 
 # clean up pacman cache
 RUN pacman --sync --clean --clean --noconfirm

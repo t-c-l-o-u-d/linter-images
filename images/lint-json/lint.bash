@@ -17,13 +17,14 @@ echo "Running json syntax check..."
 tool_errors=0
 for f in "${json_files[@]}"; do
     if ! output=$(python3 -c "
-import json, re, sys
+import json, sys
 with open(sys.argv[1]) as fh:
     text = fh.read()
-# strip JSONC comments (// and /* */) for devcontainer.json etc.
-text = re.sub(r'//.*$', '', text, flags=re.MULTILINE)
-text = re.sub(r'/\*.*?\*/', '', text, flags=re.DOTALL)
-json.loads(text)
+try:
+    json.loads(text)
+except json.JSONDecodeError:
+    import json5
+    json5.loads(text)
 " "$f" 2>&1); then
         printf "  FAIL: %s\n" "$f"
         printf "    %s\n" "$output"

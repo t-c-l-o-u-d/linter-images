@@ -164,6 +164,10 @@ consulting web documentation.
 - When a change affects documented behavior, update
   the relevant docs in the same commit.
 - Outdated docs are treated as bugs.
+- Every plan and every commit must account for doc
+  updates. Check `README.md` and `docs/` for any
+  text that the change invalidates or that should
+  reference the new work.
 
 ## Maintenance
 

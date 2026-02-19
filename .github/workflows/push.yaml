@@ -93,10 +93,9 @@ jobs:
             echo "has_linters=false" >> "${GITHUB_OUTPUT}"
           fi
 
+  # Always rebuild base so child images get a fresh foundation
   build-base:
     name: Build Base Image
-    needs: detect
-    if: needs.detect.outputs.base_changed == 'true'
     uses: ./.github/workflows/build-scan-prune.yaml
     with:
       IMAGE_NAME: "base-linter"
@@ -106,7 +105,7 @@ jobs:
   build-linters:
     name: Build Changed Linters
     needs: [detect, build-base]
-    if: ${{ !cancelled() && !failure() && needs.detect.outputs.has_linters == 'true' }}
+    if: needs.detect.outputs.has_linters == 'true'
     strategy:
       fail-fast: false
       matrix:

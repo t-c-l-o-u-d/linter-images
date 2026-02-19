@@ -13,6 +13,26 @@ if [[ ${#yaml_files[@]} -eq 0 ]]; then
     exit 0
 fi
 
+# exclude ansible vault files — not valid yaml
+vault_filtered=()
+vault_skipped=0
+for f in "${yaml_files[@]}"; do
+    if head --lines=1 "$f" \
+        | grep --quiet "^[\$]ANSIBLE_VAULT;"; then
+        vault_skipped=$((vault_skipped + 1))
+    else
+        vault_filtered+=("$f")
+    fi
+done
+if [[ $vault_skipped -gt 0 ]]; then
+    echo "Skipping ${vault_skipped} ansible vault file(s)."
+fi
+yaml_files=("${vault_filtered[@]}")
+if [[ ${#yaml_files[@]} -eq 0 ]]; then
+    echo "No non-vault yaml files to lint."
+    exit 0
+fi
+
 errors=0
 
 echo "Running yamllint..."

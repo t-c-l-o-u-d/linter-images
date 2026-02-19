@@ -15,3 +15,7 @@ ignore:
   - vulnerability: CVE-2025-64718
   # lint-markdown: markdown-it 14.1.0 — upstream Arch package, awaiting rebuild
   - vulnerability: CVE-2026-2327
+  # lint-css (stylelint), lint-javascript (eslint): ajv ReDoS — upstream Arch package, fixed in 8.18.0
+  - vulnerability: CVE-2025-69873
+  # lint-javascript (eslint): minimatch ReDoS — upstream Arch package, fixed in 10.2.1
+  - vulnerability: CVE-2026-26996

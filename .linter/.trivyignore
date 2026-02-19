@@ -19,3 +19,6 @@ CVE-2026-23949
 
 # lint-css (stylelint), lint-javascript (eslint): ajv ReDoS — upstream Arch package, fixed in 8.18.0
 CVE-2025-69873
+
+# lint-javascript (eslint): minimatch ReDoS — upstream Arch package, fixed in 10.2.1
+CVE-2026-26996

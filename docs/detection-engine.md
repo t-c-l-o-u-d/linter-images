@@ -618,6 +618,7 @@ declare -A MIME_RULES=(
     [text/csv]=lint-csv
     [text/xml]=skip
     [application/xml]=skip
+    [application/x-pem-file]=skip
 )
 ```
 

@@ -126,14 +126,13 @@ repo) would miss.
 ## Building images
 
 Never build images locally. When touching anything in
-an image directory, commit, push, then trigger
-`gh workflow run main.yaml` and wait ~6 minutes for
-CI to build.
+an image directory, commit and push. CI rebuilds
+affected images automatically on push.
 
 ## Shell commands
 
 Run all commands directly from the repo root
-(e.g. `git status`, `python3 scripts/rebuild.py`).
+(e.g. `git status`, `bash linter-aio.bash lint`).
 Never use `git -C <path>` or prefix commands with
 absolute paths — the working directory is already
 the repo root.

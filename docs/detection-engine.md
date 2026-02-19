@@ -830,12 +830,16 @@ CONTENT_RULES+=(
 Adding a Ruby linter:
 
 ```bash
-SHEBANG_RULES[ruby]=lint-ruby
-MIME_RULES[text/x-ruby]=lint-ruby
-PATTERN_RULES+=("lint-ruby|ext|rb")
+PATTERN_RULES+=(
+    "lint-ruby|ext|gemspec"
+    "lint-ruby|ext|rake"
+    "lint-ruby|ext|rb"
+    "lint-ruby|file|Gemfile"
+    "lint-ruby|file|Rakefile"
+)
 ```
 
-All three detection methods participate in scoring automatically.
+All detection methods participate in scoring automatically.
 No waterfall reordering needed.
 
 ## Performance Considerations

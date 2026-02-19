@@ -11,6 +11,7 @@ declare -A FIX_SUPPORTED=(
     [lint-javascript]=1
     [lint-json]=1
     [lint-python]=1
+    [lint-ruby]=1
     [lint-rust]=1
     [lint-yaml]=1
 )
@@ -99,6 +100,13 @@ PATTERN_RULES=(
 
     # python
     "lint-python|ext|py"
+
+    # ruby
+    "lint-ruby|ext|gemspec"
+    "lint-ruby|ext|rake"
+    "lint-ruby|ext|rb"
+    "lint-ruby|file|Gemfile"
+    "lint-ruby|file|Rakefile"
 
     # rust
     "lint-rust|ext|rs"

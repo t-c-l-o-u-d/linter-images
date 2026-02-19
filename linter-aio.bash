@@ -563,6 +563,12 @@ fi
     /usr/local/bin/lint"
     done
     hook_body+="
+
+# --- Prune old linter images left behind by --pull always ---
+\"\$RUNTIME\" image prune \\
+    --force \\
+    --filter \"label=org.opencontainers.image.source=https://github.com/t-c-l-o-u-d/linter-images\" \\
+    > /dev/null
 "
 
     mkdir --parents "$hooks_dir"
@@ -716,6 +722,12 @@ EOF
         echo "  File failures: ${total_file_failures}"
         echo "==========================================="
     fi
+
+    # prune old linter images left behind by --pull always
+    "$RUNTIME" image prune \
+        --force \
+        --filter "label=org.opencontainers.image.source=https://github.com/t-c-l-o-u-d/linter-images" \
+        > /dev/null
 
     if [[ ${errors} -gt 0 ]]; then
         echo ""

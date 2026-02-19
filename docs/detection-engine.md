@@ -583,12 +583,11 @@ detection engine. The per-file scoring correctly routes:
 Both images may end up in `needed` for a project that has both
 types of files. This is correct — they serve different files.
 
-If redundant yamllint output on ansible files is a concern (since
-ansible-lint already runs yamllint internally), that's a
-**configuration concern**, not a detection concern. The detection
-engine's job is to correctly identify what needs linting. Suppressing
-redundant runs is a scheduling optimization that belongs in a
-separate layer.
+Lint mode (yamllint) intentionally checks all YAML files for
+defense in depth, even those assigned to lint-ansible. Fix mode
+(yamlfmt) excludes ansible files to avoid breaking their
+structure — see `images/lint-yaml/fix.bash` for the self-contained
+ansible keyword filter.
 
 ## Implementation: Data Structures
 

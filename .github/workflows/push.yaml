@@ -1,0 +1,118 @@
+---
+# GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
+# Selectively rebuild container images whose source files changed on push.
+
+name: Push
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'images/**'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  detect:
+    name: Detect Changed Images
+    runs-on: ubuntu-latest
+    outputs:
+      base_changed: ${{ steps.changes.outputs.base_changed }}
+      linter_matrix: ${{ steps.changes.outputs.linter_matrix }}
+      has_linters: ${{ steps.changes.outputs.has_linters }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Detect changed image directories
+        id: changes
+        shell: bash
+        run: |
+          BEFORE="${{ github.event.before }}"
+
+          # Fall back to root commit when before is unavailable
+          if [[ "${BEFORE}" == "0000000000000000000000000000000000000000" ]]; then
+            BEFORE=$(git rev-list --max-parents=0 HEAD)
+          fi
+
+          # Diff the two endpoints; fall back to full rebuild on failure
+          if ! CHANGED_FILES=$(
+            git diff \
+              --name-only \
+              "${BEFORE}" \
+              "${{ github.sha }}"
+          ); then
+            CHANGED_FILES=$(git ls-files 'images/')
+          fi
+
+          # Check if base-linter changed
+          BASE_CHANGED="false"
+          if echo "${CHANGED_FILES}" | grep --quiet '^images/base-linter/'; then
+            BASE_CHANGED="true"
+          fi
+          echo "base_changed=${BASE_CHANGED}" >> "${GITHUB_OUTPUT}"
+
+          # Build the linter matrix
+          if [[ "${BASE_CHANGED}" == "true" ]]; then
+            # Base changed: rebuild ALL child images
+            MATRIX=$(
+              ls -d images/lint-* \
+              | jq \
+                  --raw-input \
+                  --slurp \
+                  --compact-output \
+                '[split("\n")[] | select(. != "") | {IMAGE_NAME: split("/")[-1], IMAGE_DIR: .}]'
+            )
+          else
+            # Only specific linters changed
+            MATRIX=$(
+              echo "${CHANGED_FILES}" \
+              | grep '^images/lint-' \
+              | sed --expression 's|/[^/]*$||' \
+              | sort --unique \
+              | jq \
+                  --raw-input \
+                  --slurp \
+                  --compact-output \
+                '[split("\n")[] | select(. != "") | {IMAGE_NAME: split("/")[-1], IMAGE_DIR: .}]'
+            )
+          fi
+
+          if [[ -z "${MATRIX}" ]]; then
+            MATRIX="[]"
+          fi
+          echo "linter_matrix=${MATRIX}" >> "${GITHUB_OUTPUT}"
+
+          COUNT=$(echo "${MATRIX}" | jq 'length')
+          if [[ "${COUNT}" -gt 0 ]]; then
+            echo "has_linters=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_linters=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+  build-base:
+    name: Build Base Image
+    needs: detect
+    if: needs.detect.outputs.base_changed == 'true'
+    uses: ./.github/workflows/build-scan-prune.yaml
+    with:
+      IMAGE_NAME: "base-linter"
+      IMAGE_DIR: "images/base-linter"
+    secrets: inherit
+
+  build-linters:
+    name: Build Changed Linters
+    needs: [detect, build-base]
+    if: ${{ !cancelled() && !failure() && needs.detect.outputs.has_linters == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.detect.outputs.linter_matrix) }}
+    uses: ./.github/workflows/build-scan-prune.yaml
+    with:
+      IMAGE_NAME: ${{ matrix.IMAGE_NAME }}
+      IMAGE_DIR: ${{ matrix.IMAGE_DIR }}
+    secrets: inherit

@@ -522,9 +522,9 @@ fi
 
 # run as unprivileged user inside the container
 if [[ \"\$RUNTIME\" == \"podman\" ]]; then
-    USER_ARGS=\"--userns=keep-id:uid=9001,gid=9001\"
+    USER_ARGS=(--userns=keep-id:uid=9001,gid=9001)
 else
-    USER_ARGS=\"--user \$(id --user):\$(id --group)\"
+    USER_ARGS=(--user \"\$(id --user):\$(id --group)\")
 fi
 "
 
@@ -541,7 +541,7 @@ fi
 \"\$RUNTIME\" run \\
     --rm \\
     --pull always \\
-    \$USER_ARGS \\
+    \"\${USER_ARGS[@]}\" \\
     --volume \"\$(pwd)\":/workspace:z \\
     \"\${REGISTRY}/${img}:latest\" \\
     /usr/local/bin/fix"
@@ -557,7 +557,7 @@ fi
 \"\$RUNTIME\" run \\
     --rm \\
     --pull always \\
-    \$USER_ARGS \\
+    \"\${USER_ARGS[@]}\" \\
     --volume \"\$(pwd)\":/workspace:ro,z \\
     \"\${REGISTRY}/${img}:latest\" \\
     /usr/local/bin/lint"

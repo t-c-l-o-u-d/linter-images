@@ -46,7 +46,7 @@ elif [[ -f .yamllint.yaml ]]; then
 fi
 tool_errors=0
 for f in "${yaml_files[@]}"; do
-    if ! yamllint "${yamllint_args[@]}" "$f"; then
+    if ! yamllint --strict "${yamllint_args[@]}" "$f"; then
         printf "  FAIL: %s\n" "$f"
         tool_errors=$((tool_errors + 1))
     else

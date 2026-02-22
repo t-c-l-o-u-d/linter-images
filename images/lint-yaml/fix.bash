@@ -65,6 +65,11 @@ elif [[ -f .linters/yamlfmt ]]; then
     yamlfmt_args+=(-conf .linters/yamlfmt)
 elif [[ -f .yamlfmt ]]; then
     yamlfmt_args+=(-conf .yamlfmt)
+else
+    # align yamlfmt defaults with yamllint: add document-start
+    # marker and use 2-space comment padding
+    yamlfmt_args+=(-formatter
+        'include_document_start=true,pad_line_comments=2')
 fi
 for f in "${yaml_files[@]}"; do
     printf "  %s\n" "$f"

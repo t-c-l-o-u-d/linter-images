@@ -37,13 +37,22 @@ jobs:
         id: build_image
         shell: bash
         run: |
-          buildah build \
-          --squash=true \
-          --platform=linux/amd64 \
-          --file ${{ inputs.IMAGE_DIR }}/Containerfile \
-          --tag ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:${{ env.DATE_TAG }} \
-          --tag ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest \
-          ${{ inputs.IMAGE_DIR }}
+          for attempt in 1 2 3; do
+            buildah build \
+              --squash=true \
+              --platform=linux/amd64 \
+              --file ${{ inputs.IMAGE_DIR }}/Containerfile \
+              --tag ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:${{ env.DATE_TAG }} \
+              --tag ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest \
+              ${{ inputs.IMAGE_DIR }} \
+              && break
+            if [[ "${attempt}" -eq 3 ]]; then
+              echo "Build failed after 3 attempts"
+              exit 1
+            fi
+            echo "Build attempt ${attempt} failed, retrying in 30s..."
+            sleep 30
+          done
       - name: Push the container image
         id: push_image
         shell: bash

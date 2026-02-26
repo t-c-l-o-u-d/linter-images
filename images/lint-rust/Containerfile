@@ -8,6 +8,7 @@ USER root
 RUN pacman --sync --refresh --noconfirm \
     cargo-audit \
     cargo-deny \
+    clang \
     gcc \
     pkgconf \
     rust

@@ -3,6 +3,9 @@
 Runs cargo fmt, clippy (pedantic), audit, deny, test,
 and check (debug + release).
 
+Includes clang for crates that need libclang at build
+time (e.g. bindgen-based FFI bindings).
+
 Requires a read-write volume mount because cargo writes
 `Cargo.lock` during dependency resolution. Use `:z`
 instead of `:ro,z`.

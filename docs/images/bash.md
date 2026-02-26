@@ -18,6 +18,7 @@ shebangs and verifying with `file --mime-type`.
 podman run \
     --rm \
     --pull always \
+    --network=none \
     --volume "$(pwd)":/workspace:ro,z \
     ghcr.io/t-c-l-o-u-d/linter-images/lint-bash:latest \
     /usr/local/bin/lint

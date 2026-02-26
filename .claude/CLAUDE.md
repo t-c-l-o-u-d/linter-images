@@ -40,6 +40,7 @@ ghcr.io via GitHub Actions.
   podman run \
       --rm \
       --pull always \
+      --network=none \
       --volume "$(pwd)":/workspace:ro,z \
       IMAGE \
       /usr/local/bin/lint
@@ -55,7 +56,7 @@ ghcr.io via GitHub Actions.
 ### Scripts (lint.bash / fix.bash)
 
 - Do NOT add `command -v` checks for tools installed
-  by the Containerfile — they are guaranteed to exist
+  by the Containerfile; they are guaranteed to exist
 - Use `set -euo pipefail`
 - Use `git ls-files` or `grep -rl` for file discovery
 - Accumulate errors and report PASS/FAIL per tool
@@ -65,12 +66,12 @@ ghcr.io via GitHub Actions.
   every file, then a tool-level summary
   (`PASS: toolname` or
   `FAIL: toolname (N file(s))`). Three strategies:
-  1. **Per-file invocation** — run the tool once per
+  1. **Per-file invocation**: run the tool once per
      file (shellcheck, ruff, bandit, hadolint, etc.)
-  2. **Structured output parsing** — run once with
+  2. **Structured output parsing**: run once with
      JSON/machine output, parse per-file results with
      `jq` (ansible-lint, mypy, cargo clippy, etc.)
-  3. **Project-level only** — tools that have no
+  3. **Project-level only**: tools that have no
      per-file output at all (cargo audit, cargo deny,
      cargo test) list all files before running, then
      report a single tool-level PASS/FAIL.
@@ -88,7 +89,7 @@ ghcr.io via GitHub Actions.
   the version and verify with a sha256 or stronger
   checksum.
 - Approved exceptions:
-  - `hadolint` — static binary from GitHub releases
+  - `hadolint`: static binary from GitHub releases
     (lint-containerfile)
 
 ### GitHub
@@ -134,7 +135,7 @@ affected images automatically on push.
 Run all commands directly from the repo root
 (e.g. `git status`, `bash linter-aio.bash lint`).
 Never use `git -C <path>` or prefix commands with
-absolute paths — the working directory is already
+absolute paths; the working directory is already
 the repo root.
 
 ## Research
@@ -147,9 +148,9 @@ consulting web documentation.
 - Commit messages must be 12 words or fewer.
 - Never include a `Co-Authored-By` line or give
   Claude credit.
-- Always make small, focused commits — one logical
+- Always make small, focused commits: one logical
   change per commit.
-- Commit frequently. Do not batch multiple changes —
+- Commit frequently. Do not batch multiple changes;
   commit each logical change as soon as it's done
   and passing lint.
 - When renaming or moving files/directories, include

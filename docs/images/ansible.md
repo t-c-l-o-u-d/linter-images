@@ -18,6 +18,10 @@ If found, the linter runs
 `/tmp/.ansible/collections/` (via `ANSIBLE_HOME`), so the
 workspace mount can stay read-only.
 
+This image requires network access for Galaxy downloads.
+Use `--network=private` instead of `--network=none`.
+The AIO script handles this automatically.
+
 ### Example requirements.yml
 
 ```yaml

@@ -16,6 +16,7 @@ Runs vint on `*.vim` files and files named `vimrc`.
 podman run \
     --rm \
     --pull always \
+    --network=none \
     --volume "$(pwd)":/workspace:ro,z \
     ghcr.io/t-c-l-o-u-d/linter-images/lint-vim:latest \
     /usr/local/bin/lint

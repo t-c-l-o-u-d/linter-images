@@ -16,6 +16,7 @@ Runs markdownlint-cli2 on `*.md` files.
 podman run \
     --rm \
     --pull always \
+    --network=none \
     --volume "$(pwd)":/workspace:ro,z \
     ghcr.io/t-c-l-o-u-d/linter-images/lint-markdown:latest \
     /usr/local/bin/lint

@@ -5,8 +5,14 @@ and check (debug + release).
 
 Requires a read-write volume mount because cargo writes
 `Cargo.lock` during dependency resolution. Use `:z`
-instead of `:ro,z`. The AIO script handles this
-automatically.
+instead of `:ro,z`.
+
+This image requires network access. Cargo audit fetches
+the advisory database, cargo deny checks advisories, and
+clippy/check/test download crates. Use
+`--network=private` instead of `--network=none`.
+
+The AIO script handles both of these automatically.
 
 ## Configuration
 

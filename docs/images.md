@@ -24,6 +24,10 @@ Every image has a `/usr/local/bin/lint` script. Images
 marked **Yes** also have a `/usr/local/bin/fix` script
 that auto-formats your code.
 
+All images run with `--network=none` except `lint-rust`
+and `lint-ansible`, which require network access and use
+`--network=private` on podman.
+
 ## Per-Image Details
 
 - [lint-ansible](images/ansible.md)

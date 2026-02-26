@@ -13,7 +13,7 @@ if [[ ${#yaml_files[@]} -eq 0 ]]; then
     exit 0
 fi
 
-# exclude ansible vault files — not valid yaml
+# exclude ansible vault files; not valid yaml
 vault_filtered=()
 vault_skipped=0
 for f in "${yaml_files[@]}"; do

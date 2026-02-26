@@ -13,7 +13,7 @@ if [[ ${#yaml_files[@]} -eq 0 ]]; then
     exit 0
 fi
 
-# exclude ansible vault files — yamlfmt corrupts their structure
+# exclude ansible vault files; yamlfmt corrupts their structure
 vault_filtered=()
 vault_skipped=0
 for f in "${yaml_files[@]}"; do
@@ -33,7 +33,7 @@ if [[ ${#yaml_files[@]} -eq 0 ]]; then
     exit 0
 fi
 
-# in ansible projects, exclude files that contain ansible keywords —
+# in ansible projects, exclude files that contain ansible keywords;
 # those belong to lint-ansible and yamlfmt can break their structure
 if [[ -d roles ]] || [[ -f ansible.cfg ]]; then
     ansible_re='^[[:space:]]*-?[[:space:]]*(become|gather_facts|tasks|handlers)[[:space:]]*:'

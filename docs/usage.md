@@ -14,6 +14,7 @@ podman run \
   --rm \
   --pull always \
   --userns=keep-id:uid=9001,gid=9001 \
+  --network=none \
   --volume "$(pwd)":/workspace:ro,z \
   IMAGE \
   /usr/local/bin/lint
@@ -25,6 +26,13 @@ flag maps your host user to that UID so volume mounts
 are accessible. For `docker`, replace the flag with
 `--user "$(id -u):$(id -g)"`.
 
+> **Note:** Most images run with `--network=none`.
+> `lint-rust` and `lint-ansible` need network access
+> (cargo fetches crate/advisory databases;
+> ansible-galaxy downloads collections) and use
+> `--network=private` on podman. The AIO script handles
+> this automatically.
+>
 > **Note:** `lint-rust` requires a read-write mount
 > (`:z` instead of `:ro,z`) because cargo writes
 > `Cargo.lock` during dependency resolution. The AIO
@@ -77,6 +85,7 @@ fi
   --rm \
   --pull always \
   $USER_ARGS \
+  --network=none \
   --volume "$(pwd)":/workspace:z \
   "${REGISTRY}/lint-python:latest" \
   /usr/local/bin/fix
@@ -84,6 +93,7 @@ fi
   --rm \
   --pull always \
   $USER_ARGS \
+  --network=none \
   --volume "$(pwd)":/workspace:ro,z \
   "${REGISTRY}/lint-python:latest" \
   /usr/local/bin/lint
@@ -93,6 +103,7 @@ fi
   --rm \
   --pull always \
   $USER_ARGS \
+  --network=none \
   --volume "$(pwd)":/workspace:z \
   "${REGISTRY}/lint-bash:latest" \
   /usr/local/bin/fix
@@ -100,6 +111,7 @@ fi
   --rm \
   --pull always \
   $USER_ARGS \
+  --network=none \
   --volume "$(pwd)":/workspace:ro,z \
   "${REGISTRY}/lint-bash:latest" \
   /usr/local/bin/lint
@@ -109,6 +121,7 @@ fi
   --rm \
   --pull always \
   $USER_ARGS \
+  --network=none \
   --volume "$(pwd)":/workspace:ro,z \
   "${REGISTRY}/lint-yaml:latest" \
   /usr/local/bin/lint
@@ -116,6 +129,7 @@ fi
   --rm \
   --pull always \
   $USER_ARGS \
+  --network=none \
   --volume "$(pwd)":/workspace:ro,z \
   "${REGISTRY}/lint-json:latest" \
   /usr/local/bin/lint

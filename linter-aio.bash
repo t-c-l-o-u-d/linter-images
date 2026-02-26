@@ -16,6 +16,12 @@ declare -A FIX_SUPPORTED=(
     [lint-yaml]=1
 )
 
+# images that require network access at runtime
+declare -A NEEDS_NETWORK=(
+    [lint-ansible]=1
+    [lint-rust]=1
+)
+
 # --- Consensus scoring weights ---
 # Every detection method votes for a linter. Highest total score wins.
 # Content-based methods (MIME, shebang, heuristics) at weight 3;
@@ -329,7 +335,7 @@ detect_images() {
                 context="yaml"
             elif [[ "$ext" == "yml" || "$ext" == "yaml" ]]; then
                 context="yaml"
-                # MIME tools failed to detect YAML — give lint-yaml
+                # MIME tools failed to detect YAML; give lint-yaml
                 # the W_MIME vote the format detection would have provided
                 scores["lint-yaml"]=$(( ${scores["lint-yaml"]:-0} + W_MIME ))
                 [[ $W_MIME -gt ${max_w["lint-yaml"]:-0} ]] && max_w["lint-yaml"]=$W_MIME
@@ -458,10 +464,19 @@ run_container() {
         user_args=(--user "$(id --user):$(id --group)")
     fi
 
+    # restrict network: none for most images, private for those that need it
+    local net_args=()
+    if [[ -z "${NEEDS_NETWORK[$image_name]+x}" ]]; then
+        net_args=(--network=none)
+    elif [[ "$RUNTIME" == "podman" ]]; then
+        net_args=(--network=private)
+    fi
+
     "$RUNTIME" run \
         --rm \
         --pull always \
         "${user_args[@]}" \
+        "${net_args[@]}" \
         --volume "$MOUNT_DIR":/workspace:"$vol_opts" \
         --volume "$MOUNT_DIR":"$WORKTREE":ro,z \
         --volume "$GIT_ABS_DIR":/workspace/.git:ro,z \
@@ -526,6 +541,14 @@ if [[ \"\$RUNTIME\" == \"podman\" ]]; then
 else
     USER_ARGS=(--user \"\$(id --user):\$(id --group)\")
 fi
+
+# network policy: none for most images, private for those that need it
+NET_NONE=(--network=none)
+if [[ \"\$RUNTIME\" == \"podman\" ]]; then
+    NET_PRIVATE=(--network=private)
+else
+    NET_PRIVATE=()
+fi
 "
 
     # fix section: auto-fix images
@@ -537,11 +560,16 @@ fi
 # --- Fix ---"
                 has_fix=1
             fi
+            local net_var="NET_NONE"
+            if [[ -n "${NEEDS_NETWORK[$img]+x}" ]]; then
+                net_var="NET_PRIVATE"
+            fi
             hook_body+="
 \"\$RUNTIME\" run \\
     --rm \\
     --pull always \\
     \"\${USER_ARGS[@]}\" \\
+    \"\${${net_var}[@]}\" \\
     --volume \"\$(pwd)\":/workspace:z \\
     \"\${REGISTRY}/${img}:latest\" \\
     /usr/local/bin/fix"
@@ -553,11 +581,16 @@ fi
 
 # --- Lint ---"
     for img in "${images[@]}"; do
+        local net_var="NET_NONE"
+        if [[ -n "${NEEDS_NETWORK[$img]+x}" ]]; then
+            net_var="NET_PRIVATE"
+        fi
         hook_body+="
 \"\$RUNTIME\" run \\
     --rm \\
     --pull always \\
     \"\${USER_ARGS[@]}\" \\
+    \"\${${net_var}[@]}\" \\
     --volume \"\$(pwd)\":/workspace:ro,z \\
     \"\${REGISTRY}/${img}:latest\" \\
     /usr/local/bin/lint"
@@ -590,7 +623,7 @@ fi
 
 # --- Main ---
 # Wrapped in a function so `curl | bash` reads the entire script before
-# executing anything — prevents partial-read failures over the pipe.
+# executing anything. Prevents partial-read failures over the pipe.
 
 main() {
     MODE="${1:-lint}"
@@ -601,9 +634,9 @@ main() {
 
     if [[ "$MODE" != "lint" && "$MODE" != "fix" ]]; then
         echo "Usage: linter-aio.bash [lint|fix|install]"
-        echo "  lint    — run all detected linters (default)"
-        echo "  fix     — auto-fix with supported linters"
-        echo "  install — install a pre-commit hook in the current repo"
+        echo "  lint      run all detected linters (default)"
+        echo "  fix       auto-fix with supported linters"
+        echo "  install   install a pre-commit hook in the current repo"
         exit 1
     fi
 
@@ -619,7 +652,7 @@ main() {
 
     # When the gitdir lives outside the worktree (separated gitdir, e.g.
     # dotfiles repo with core.worktree=$HOME), mounting the full worktree
-    # is unsafe — it may be $HOME.  Stage only tracked files into a temp dir.
+    # is unsafe; it may be $HOME.  Stage only tracked files into a temp dir.
     MOUNT_DIR="$WORKTREE"
     if [[ "$GIT_ABS_DIR" != "${WORKTREE}/.git" ]]; then
         MOUNT_DIR="$(mktemp -d)"
@@ -732,7 +765,7 @@ EOF
     if [[ ${errors} -gt 0 ]]; then
         echo ""
         if [[ "$MODE" == "lint" && ${total_file_failures} -gt 0 ]]; then
-            echo "${MODE^} failed — ${errors} image(s), ${total_file_failures} file(s)"
+            echo "${MODE^} failed: ${errors} image(s), ${total_file_failures} file(s)"
         else
             echo "${MODE^} failed with ${errors} error(s)"
         fi

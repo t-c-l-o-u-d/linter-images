@@ -23,6 +23,7 @@ bandit (security analysis) on `*.py` files.
 podman run \
     --rm \
     --pull always \
+    --network=none \
     --volume "$(pwd)":/workspace:ro,z \
     ghcr.io/t-c-l-o-u-d/linter-images/lint-python:latest \
     /usr/local/bin/lint

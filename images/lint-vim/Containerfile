@@ -15,7 +15,7 @@ COPY lint.bash /usr/local/bin/lint
 RUN chmod +x /usr/local/bin/lint
 
 # suppress pkg_resources deprecation warning from vint on Python 3.14+
-# REVIEW-BY: 2026-05-14 — remove if vint upstream drops pkg_resources
+# REVIEW-BY: 2026-05-14. Remove if vint upstream drops pkg_resources
 ENV LINTER_IMAGE=lint-vim
 ENV PYTHONWARNINGS="ignore::UserWarning:vint.linting.cli"
 

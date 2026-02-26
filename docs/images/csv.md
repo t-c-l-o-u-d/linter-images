@@ -17,6 +17,7 @@ against a JSON schema with qsv if a schema file exists.
 podman run \
     --rm \
     --pull always \
+    --network=none \
     --volume "$(pwd)":/workspace:ro,z \
     ghcr.io/t-c-l-o-u-d/linter-images/lint-csv:latest \
     /usr/local/bin/lint

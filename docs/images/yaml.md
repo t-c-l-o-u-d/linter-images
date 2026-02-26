@@ -28,6 +28,7 @@ still checks all YAML files for defense in depth.
 podman run \
     --rm \
     --pull always \
+    --network=none \
     --volume "$(pwd)":/workspace:ro,z \
     ghcr.io/t-c-l-o-u-d/linter-images/lint-yaml:latest \
     /usr/local/bin/lint

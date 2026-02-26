@@ -17,9 +17,9 @@ The original implementation used a strict waterfall:
 
 This is fragile. A bash script named `Containerfile.bu` gets caught
 by the prefix rule (`Containerfile*`) and routed to
-`lint-containerfile` — wrong. The file's **content** is bash, but
-its **name** looks like a Containerfile. Name-based detection should
-be a method of absolute last resort.
+`lint-containerfile`, which is wrong. The file's **content** is bash,
+but its **name** looks like a Containerfile. Name-based detection
+should be a method of absolute last resort.
 
 The second iteration flipped to MIME-first:
 
@@ -96,7 +96,7 @@ This is how the approach works:
 **Content heuristics** (W=3): Domain-specific patterns in file
 content. Strongest individual signal but can false-positive on
 isolated keywords. Equal weight to MIME means a single heuristic
-match cannot override MIME — you need 2+ for consensus.
+match cannot override MIME; you need 2+ for consensus.
 
 **MIME type** (W=3): `file --brief --mime-type` uses libmagic to
 identify format from content. Very reliable for what it detects,
@@ -105,7 +105,7 @@ content alone).
 
 **XDG MIME** (W=3): `mimetype --brief --magic-only` from
 perl-file-mimeinfo. Detects YAML, Markdown, CSS, CSV that libmagic
-misses. Only runs when libmagic had no match — so at most one MIME
+misses. Only runs when libmagic had no match, so at most one MIME
 vote per file, not two.
 
 **Shebang** (W=3): First line `#!` interpreter detection. Definitive
@@ -113,13 +113,13 @@ for scripts. Equal weight to MIME because both are content-based and
 equally reliable in their domain.
 
 **Extension** (W=1): File extension (`.py`, `.yml`, etc.). Weakest
-signal — trivially misleading (`.bu` extension on a Containerfile).
+signal, trivially misleading (`.bu` extension on a Containerfile).
 
 **Filename** (W=1): Exact filename match (`.bashrc`, `Cargo.toml`).
 Weak but useful for extensionless config files.
 
 **Prefix** (W=1): Filename prefix match (`Containerfile`,
-`Dockerfile`). Weakest — the source of the original bug.
+`Dockerfile`). Weakest; the source of the original bug.
 
 ### Why W_CONTENT = W_MIME = W_SHEBANG = 3?
 
@@ -131,8 +131,8 @@ prevents a single keyword like `hosts:` from incorrectly reclassifying
 a generic YAML file as ansible.
 
 If content heuristics had weight 5, a single `hosts:` match (5
-points) would override MIME (3) + extension (1) = 4. That's too
-aggressive — `hosts:` alone is not definitive evidence of ansible.
+points) would override MIME (3) + extension (1) = 4. That is too
+aggressive; `hosts:` alone is not definitive evidence of ansible.
 
 If content heuristics had weight 4, a single match (4 points) would
 tie with MIME + extension (4 points), requiring tiebreaker logic for
@@ -167,11 +167,11 @@ MIME type:
 | `application/yaml` | `yaml` |
 | `text/plain` (when XDG MIME says `application/yaml`) | `yaml` |
 | `text/plain` (otherwise) | `plain` |
-| Everything else | (no context — heuristics skip) |
+| Everything else | (no context; heuristics skip) |
 
 Note: `text/x-shellscript` does NOT get a context. If MIME
 definitively identifies a file as a shell script, content heuristics
-do not run. There is nothing to disambiguate — it IS a shell script.
+do not run. There is nothing to disambiguate: it IS a shell script.
 A Containerfile with a bash shebang is detected as shell by MIME,
 and content heuristics correctly do not attempt to reclassify it.
 
@@ -200,10 +200,10 @@ values or comments.
 
 **Why these four keywords?** They were chosen for specificity:
 
-- `hosts:` was considered but rejected — too generic. Docker
+- `hosts:` was considered but rejected as too generic. Docker
   compose, various configs, and even plain YAML documentation
   might have `hosts:` as a key.
-- `roles:` was considered but rejected — generic enough to appear
+- `roles:` was considered but rejected as generic enough to appear
   in RBAC configs, database schemas, etc.
 - `become:` and `gather_facts:` are the most ansible-specific
   keywords in existence. They appear in virtually no other context.
@@ -220,9 +220,9 @@ A complex playbook with `become`, `gather_facts`, `tasks`, and
 `handlers` would score 12 points for lint-ansible. Overwhelmingly
 confident.
 
-A YAML file with only `tasks:` (ambiguous — could be a generic
+A YAML file with only `tasks:` (ambiguous; could be a generic
 config) scores 3 for lint-ansible vs 4 for lint-yaml. lint-yaml
-wins. This is the correct conservative choice — a single keyword
+wins. This is the correct conservative choice: a single keyword
 is not enough evidence.
 
 ### Containerfile Heuristics (context: plain)
@@ -231,10 +231,10 @@ These patterns detect Dockerfile syntax in files that MIME
 identifies as `text/plain` (i.e., files without a shebang or
 other identifying magic bytes).
 
-- `^FROM[[:space:]]+[^[:space:]]` — The FROM directive. Every
+- `^FROM[[:space:]]+[^[:space:]]`: The FROM directive. Every
   Containerfile starts with or contains at least one FROM. Rare in
   natural language text at the start of a line.
-- `^(RUN|COPY|ADD|...)[[:space:]]` — Other Dockerfile directives. A
+- `^(RUN|COPY|ADD|...)[[:space:]]`: Other Dockerfile directives. A
   real Containerfile will have multiple of these. A text file randomly
   containing "FROM something" is unlikely to also contain
   "RUN something".
@@ -261,7 +261,7 @@ heuristics for Containerfile should NOT run because:
 
 1. The file IS a shell script. MIME said so. The shebang confirms.
 2. A bash script may legitimately contain `FROM` in a variable,
-   heredoc, or string — not because it's a Containerfile.
+   heredoc, or string, not because it's a Containerfile.
 3. Even if heuristics ran, `lint-bash` at 6 points would beat
    `lint-containerfile` at 3-4 points. But not running them avoids
    the noise entirely.
@@ -326,7 +326,7 @@ File content: starts with `#!/usr/bin/env bash`, contains bash code.
 | -------- | -------- | -------- | --------------- |
 | MIME (`text/x-shellscript`) | lint-bash | 3 | bash=3 |
 | Shebang (`bash`) | lint-bash | 3 | bash=6 |
-| Content heuristics | (no context for shellscript) | — | — |
+| Content heuristics | (no context for shellscript) | - | - |
 | Extension (`.bu`) | skip | 1 | skip=1 |
 | Prefix (`Containerfile`) | lint-containerfile | 1 | containerfile=1 |
 
@@ -342,8 +342,8 @@ No shebang line.
 
 | Method | Linter | Weight | Running Total |
 | -------- | -------- | -------- | --------------- |
-| MIME (`text/plain`) | (no match) | 0 | — |
-| Shebang | (none) | — | — |
+| MIME (`text/plain`) | (no match) | 0 | - |
+| Shebang | (none) | - | - |
 | Content: `^FROM\s+\S` | lint-containerfile | 3 | containerfile=3 |
 | Content: `^RUN\s` | lint-containerfile | 3 | containerfile=6 |
 | Prefix (`Containerfile`) | lint-containerfile | 1 | containerfile=7 |
@@ -351,7 +351,7 @@ No shebang line.
 **Result:** lint-containerfile wins with 7 points. Correct.
 
 Even without the prefix match, content heuristics alone give 6
-points — enough to win against any other contestant.
+points, enough to win against any other contestant.
 
 ### Case 3: `Containerfile.alpine` (multi-stage variant)
 
@@ -359,10 +359,10 @@ Same as Case 2 but with `.alpine` extension.
 
 | Method | Linter | Weight | Running Total |
 | -------- | -------- | -------- | --------------- |
-| MIME (`text/plain`) | (no match) | 0 | — |
+| MIME (`text/plain`) | (no match) | 0 | - |
 | Content: `^FROM\s+\S` | lint-containerfile | 3 | containerfile=3 |
 | Content: `^RUN\s` | lint-containerfile | 3 | containerfile=6 |
-| Extension (`.alpine`) | (no match) | — | — |
+| Extension (`.alpine`) | (no match) | - | - |
 | Prefix (`Containerfile`) | lint-containerfile | 1 | containerfile=7 |
 
 **Result:** lint-containerfile wins with 7 points. Correct.
@@ -390,7 +390,7 @@ File content: Plain YAML key-value pairs, no ansible keywords.
 | Method | Linter | Weight | Running Total |
 | -------- | -------- | -------- | --------------- |
 | MIME (`application/yaml`) | lint-yaml | 3 | yaml=3 |
-| Content heuristics | (no ansible keywords match) | — | — |
+| Content heuristics | (no ansible keywords match) | - | - |
 | Extension (`.yml`) | lint-yaml | 1 | yaml=4 |
 
 **Result:** lint-yaml wins with 4 points. Correct.
@@ -423,7 +423,7 @@ match is never decisive.
 
 **Result:** lint-bash wins with 7 points. Correct.
 
-All methods agree — maximum consensus.
+All methods agree: maximum consensus.
 
 ### Case 8: `myscript` (extensionless bash script)
 
@@ -431,8 +431,8 @@ All methods agree — maximum consensus.
 | -------- | -------- | -------- | --------------- |
 | MIME (`text/x-shellscript`) | lint-bash | 3 | bash=3 |
 | Shebang (`bash`) | lint-bash | 3 | bash=6 |
-| Extension | (none) | — | — |
-| Filename | (no match) | — | — |
+| Extension | (none) | - | - |
+| Filename | (no match) | - | - |
 
 **Result:** lint-bash wins with 6 points. Correct.
 
@@ -443,7 +443,7 @@ confidence.
 
 | Method | Linter | Weight | Running Total |
 | -------- | -------- | -------- | --------------- |
-| MIME (`text/plain`) | (no match) | 0 | — |
+| MIME (`text/plain`) | (no match) | 0 | - |
 | Extension (`.toml`) | skip | 1 | skip=1 |
 | Filename (`Cargo.toml`) | lint-rust | 1 | rust=1 |
 
@@ -454,7 +454,7 @@ linter. lint-rust wins. Correct.
 
 | Method | Linter | Weight | Running Total |
 | -------- | -------- | -------- | --------------- |
-| MIME (`text/plain`) | (no match) | 0 | — |
+| MIME (`text/plain`) | (no match) | 0 | - |
 | Extension (`.toml`) | skip | 1 | skip=1 |
 
 **Result:** skip wins with 1 point. File silently ignored. Correct.
@@ -464,7 +464,7 @@ linter. lint-rust wins. Correct.
 | Method | Linter | Weight | Running Total |
 | -------- | -------- | -------- | --------------- |
 | MIME (`text/x-shellscript`) | lint-bash | 3 | bash=3 |
-| Shebang | (typically none in .bashrc) | — | — |
+| Shebang | (typically none in .bashrc) | - | - |
 | Filename (`.bashrc`) | lint-bash | 1 | bash=4 |
 
 **Result:** lint-bash wins with 4 points. Correct.
@@ -479,7 +479,7 @@ ensure that dotfiles without a real extension get `ext=""`.
 
 | Method | Linter | Weight | Running Total |
 | -------- | -------- | -------- | --------------- |
-| MIME (`image/webp`) | (binary skip) | — | *continue* |
+| MIME (`image/webp`) | (binary skip) | - | *continue* |
 
 **Result:** Skipped before scoring. The binary/image/inode skip
 runs before any votes are cast.
@@ -507,7 +507,7 @@ runs before any votes are cast.
 
 | Method | Linter | Weight | Running Total |
 | -------- | -------- | -------- | --------------- |
-| MIME (`text/x-c` or `text/plain`) | (no match) | 0 | — |
+| MIME (`text/x-c` or `text/plain`) | (no match) | 0 | - |
 | Extension (`.rs`) | lint-rust | 1 | rust=1 |
 
 **Result:** lint-rust wins with 1 point (sole voter). Correct.
@@ -520,18 +520,18 @@ there's no competing vote.
 
 | Method | Linter | Weight | Running Total |
 | -------- | -------- | -------- | --------------- |
-| MIME (`text/x-perl`) | (no match in MIME_RULES) | 0 | — |
-| Shebang (`perl`) | (no match in SHEBANG_RULES) | 0 | — |
+| MIME (`text/x-perl`) | (no match in MIME_RULES) | 0 | - |
+| Shebang (`perl`) | (no match in SHEBANG_RULES) | 0 | - |
 
 **Result:** No votes. Flagged as unsupported:
-`scriptname (text/x-perl)`. Correct — we don't have a perl linter.
+`scriptname (text/x-perl)`. Correct; we don't have a perl linter.
 
 ## Project-Level Detection
 
 Some linters operate at the project level, not the file level.
 ansible-lint needs to see the entire project structure (roles/,
 inventory, playbooks/) to understand context. Detecting "is this an
-ansible project?" cannot be done per-file — it requires examining
+ansible project?" cannot be done per-file; it requires examining
 directory structure.
 
 Project-level detection runs BEFORE the per-file scoring loop and
@@ -558,7 +558,7 @@ We considered adding a W_PROJECT weight to every YAML file in an
 ansible project. But this would bias ALL YAML files toward ansible,
 including CI configs (`ci.yml`), docker-compose files, and other
 non-ansible YAML. Project structure tells you "this project uses
-ansible" — it doesn't tell you "this specific file is an ansible
+ansible"; it doesn't tell you "this specific file is an ansible
 playbook." Per-file content heuristics handle the per-file question.
 
 ## Supersession: Removed
@@ -581,12 +581,12 @@ detection engine. The per-file scoring correctly routes:
 - Generic YAML configs → `lint-yaml` (via MIME + extension)
 
 Both images may end up in `needed` for a project that has both
-types of files. This is correct — they serve different files.
+types of files. This is correct; they serve different files.
 
 Lint mode (yamllint) intentionally checks all YAML files for
 defense in depth, even those assigned to lint-ansible. Fix mode
 (yamlfmt) excludes ansible files to avoid breaking their
-structure — see `images/lint-yaml/fix.bash` for the self-contained
+structure. See `images/lint-yaml/fix.bash` for the self-contained
 ansible keyword filter.
 
 ## Implementation: Data Structures
@@ -758,7 +758,7 @@ When context is upgraded from extension alone (both MIME tools returned
 `text/plain`), lint-yaml only has W_EXT (1 point). A single content
 heuristic match for lint-ansible (W_CONTENT = 3) would beat it. This
 violates the design principle that **a single keyword cannot override
-format detection** — the entire weight system assumes lint-yaml gets
+format detection**: the entire weight system assumes lint-yaml gets
 W_MIME (3) + W_EXT (1) = 4 points for YAML files.
 
 The fix: when extension upgrades the context to `yaml`, also give
@@ -859,7 +859,7 @@ Additional I/O per file:
 
 For a repository with 500 files, the extra cost is roughly:
 
-- 500 additional `head --lines=1` calls (negligible — first line
+- 500 additional `head --lines=1` calls (negligible; the first line
   is always in page cache after `file` already read the file)
 - ~100 `head --lines=50` calls (for YAML and plain text files)
 - ~100 `grep` calls per content rule (6 rules x 100 files = 600

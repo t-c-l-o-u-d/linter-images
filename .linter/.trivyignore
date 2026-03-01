@@ -22,3 +22,5 @@ CVE-2025-69873
 
 # lint-javascript (eslint): minimatch ReDoS. Upstream Arch package, fixed in 10.2.1
 CVE-2026-26996
+CVE-2026-27903
+CVE-2026-27904

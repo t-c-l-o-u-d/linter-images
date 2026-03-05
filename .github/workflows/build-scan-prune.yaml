@@ -83,7 +83,6 @@ jobs:
         uses: aquasecurity/trivy-action@0.34.1
         with:
           image-ref: 'ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest'
-          version: 'latest'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true

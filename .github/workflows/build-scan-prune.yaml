@@ -80,7 +80,7 @@ jobs:
               --password-stdin \
               ghcr.io
       - name: Scan Container Image (trivy)
-        uses: aquasecurity/trivy-action@0.34.2
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: 'ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest'
           format: 'table'

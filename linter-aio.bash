@@ -256,7 +256,7 @@ detect_images() {
     done
     for entry in "${pat_glob[@]}"; do
         IFS='|' read -r image pattern <<< "$entry"
-        if git -c core.quotePath=false ls-files --full-name "$WORKTREE/$pattern" | grep --quiet .; then
+        if git -c core.quotePath=false ls-files --full-name -- "$pattern" | grep --quiet .; then
             needed["$image"]=1
             LINTER_FILES["$image"]+=$'\n'"    (project: ${pattern})"
         fi
@@ -416,7 +416,7 @@ detect_images() {
                 undetected["$f"]="$hint"
             fi
         fi
-    done < <(git -c core.quotePath=false ls-files --full-name "$WORKTREE")
+    done < <(git -c core.quotePath=false ls-files --full-name)
 
     # print undetected file warnings to stderr
     if [[ ${#undetected[@]} -gt 0 ]]; then
@@ -495,7 +495,7 @@ install_hook() {
     }
 
     WORKTREE="$(git rev-parse --show-toplevel 2>/dev/null \
-        || git config core.worktree 2>/dev/null \
+        || git config --type=path core.worktree 2>/dev/null \
         || echo "$PWD")"
 
     local hooks_dir="${git_dir}/hooks"
@@ -647,7 +647,7 @@ main() {
     }
 
     WORKTREE="$(git rev-parse --show-toplevel 2>/dev/null \
-        || git config core.worktree 2>/dev/null \
+        || git config --type=path core.worktree 2>/dev/null \
         || echo "$PWD")"
 
     # When the gitdir lives outside the worktree (separated gitdir, e.g.
@@ -657,7 +657,7 @@ main() {
     if [[ "$GIT_ABS_DIR" != "${WORKTREE}/.git" ]]; then
         MOUNT_DIR="$(mktemp -d)"
         trap 'rm -rf "$MOUNT_DIR"' EXIT
-        git ls-files --full-name -z "$WORKTREE" | while IFS= read -r -d '' f; do
+        git ls-files --full-name -z | while IFS= read -r -d '' f; do
             mkdir -p "$MOUNT_DIR/$(dirname "$f")"
             cp -- "$WORKTREE/$f" "$MOUNT_DIR/$f"
         done
@@ -714,7 +714,7 @@ EOF
 
         # sync fixes back when using a temp dir (separated gitdir)
         if [[ "$MOUNT_DIR" != "$WORKTREE" ]]; then
-            git ls-files --full-name -z "$WORKTREE" | while IFS= read -r -d '' f; do
+            git ls-files --full-name -z | while IFS= read -r -d '' f; do
                 if ! cmp -s "$MOUNT_DIR/$f" "$WORKTREE/$f"; then
                     cp -- "$MOUNT_DIR/$f" "$WORKTREE/$f"
                 fi

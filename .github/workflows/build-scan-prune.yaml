@@ -30,7 +30,7 @@ jobs:
         id: registry_auth
         shell: bash
         run: echo "${{ secrets.GITHUB_TOKEN }}" | buildah login ghcr.io -u ${{ github.actor }} --password-stdin
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           submodules: 'recursive'
       - name: Build the container image
@@ -68,7 +68,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Authenticate to the registry
         shell: bash
         run: |
@@ -80,26 +80,17 @@ jobs:
               --password-stdin \
               ghcr.io
       - name: Scan Container Image (trivy)
-        uses: aquasecurity/trivy-action@0.34.2
-        with:
-          image-ref: 'ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest'
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH,MEDIUM'
-          trivyignores: '.linter/.trivyignore'
-          cache: 'false'
+        shell: bash
+        run: |
+          .github/scripts/trivy.bash \
+            'ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest' \
+            --ignorefile .linter/.trivyignore
       - name: Scan Container Image (grype)
-        uses: anchore/scan-action@v7.3.2
-        env:
-          GRYPE_CONFIG: .linter/.grype.yaml
-        with:
-          image: 'ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest'
-          output-format: 'table'
-          severity-cutoff: 'medium'
-          only-fixed: 'true'
-          by-cve: 'true'
+        shell: bash
+        run: |
+          .github/scripts/grype.bash \
+            'ghcr.io/${{ github.repository }}/${{ inputs.IMAGE_NAME }}:latest' \
+            --config .linter/.grype.yaml
   prune:
     needs: scan
     runs-on: ubuntu-latest

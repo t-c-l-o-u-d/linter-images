@@ -12,6 +12,8 @@ CVE-2026-27142
 
 # lint-css: js-yaml. Upstream Arch package
 CVE-2025-64718
+# lint-css: flatted (stylelint dep). Upstream Arch package, fixed in 3.4.0
+CVE-2026-32141
 
 # lint-markdown: markdown-it ReDoS. Upstream Arch package, fixed in 14.1.1
 CVE-2026-2327

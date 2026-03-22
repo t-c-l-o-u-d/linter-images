@@ -62,7 +62,7 @@ TRIVY_CMD=(
     trivy image
     --severity "$SEVERITY"
     --ignore-unfixed
-    --pkg-type "os,library"
+    --pkg-types "os,library"
     --format "$FORMAT"
     --exit-code "$EXIT_CODE"
 )

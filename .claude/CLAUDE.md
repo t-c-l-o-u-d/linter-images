@@ -130,6 +130,14 @@ Never build images locally. When touching anything in
 an image directory, commit and push. CI rebuilds
 affected images automatically on push.
 
+To rebuild a single image without rebuilding all:
+
+```bash
+gh workflow run Main --field image=lint-css
+```
+
+Leave `image` blank (or omit it) to rebuild everything.
+
 ## Shell commands
 
 Run all commands directly from the repo root

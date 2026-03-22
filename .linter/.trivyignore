@@ -1,4 +1,4 @@
-# REVIEW-BY: 2026-03-15. Remove these and re-test; drop any that are fixed
+# REVIEW-BY: 2026-04-05. Remove these and re-test; drop any that are fixed
 
 # captree (Go 1.25.3 stdlib): upstream Arch package, awaiting rebuild
 CVE-2025-61726
@@ -7,6 +7,8 @@ CVE-2025-61728
 CVE-2025-61729
 CVE-2025-61730
 CVE-2025-68121
+CVE-2026-25679
+CVE-2026-27142
 
 # lint-css: js-yaml. Upstream Arch package
 CVE-2025-64718

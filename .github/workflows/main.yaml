@@ -8,6 +8,12 @@ on:
   schedule:
     - cron: '38 22 */3 * *'
   workflow_dispatch:
+    inputs:
+      image:
+        description: 'Single image to build (e.g. lint-css). Leave blank for all.'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -16,6 +22,7 @@ permissions:
 jobs:
   build-base:
     name: Build Base Image
+    if: inputs.image == ''
     uses: ./.github/workflows/build-scan-prune.yaml
     with:
       IMAGE_NAME: "base-linter"
@@ -32,15 +39,21 @@ jobs:
       - id: set-matrix
         shell: bash
         run: |
-          echo "matrix=$(
-            ls -d images/lint-* \
-            | jq --raw-input --slurp --compact-output \
-              '[split("\n")[] | select(. != "") | {IMAGE_NAME: split("/")[-1], IMAGE_DIR: .}]'
-          )" >> "$GITHUB_OUTPUT"
+          IMAGE_INPUT="${{ inputs.image }}"
+          if [[ -n "${IMAGE_INPUT}" ]]; then
+            echo "matrix=[{\"IMAGE_NAME\":\"${IMAGE_INPUT}\",\"IMAGE_DIR\":\"images/${IMAGE_INPUT}\"}]" >> "$GITHUB_OUTPUT"
+          else
+            echo "matrix=$(
+              ls -d images/lint-* \
+              | jq --raw-input --slurp --compact-output \
+                '[split("\n")[] | select(. != "") | {IMAGE_NAME: split("/")[-1], IMAGE_DIR: .}]'
+            )" >> "$GITHUB_OUTPUT"
+          fi
 
   build-linters:
     name: Build and Prune Images
     needs: [build-base, discover]
+    if: always() && needs.discover.result == 'success' && (needs.build-base.result == 'success' || needs.build-base.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:

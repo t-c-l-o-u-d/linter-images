@@ -22,7 +22,6 @@ permissions:
 jobs:
   build-base:
     name: Build Base Image
-    if: inputs.image == ''
     uses: ./.github/workflows/build-scan-prune.yaml
     with:
       IMAGE_NAME: "base-linter"
@@ -53,7 +52,6 @@ jobs:
   build-linters:
     name: Build and Prune Images
     needs: [build-base, discover]
-    if: always() && needs.discover.result == 'success' && (needs.build-base.result == 'success' || needs.build-base.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:

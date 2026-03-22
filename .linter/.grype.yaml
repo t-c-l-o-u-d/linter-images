@@ -1,5 +1,5 @@
 ---
-# REVIEW-BY: 2026-03-15. Remove these and re-test; drop any that are fixed
+# REVIEW-BY: 2026-04-05. Remove these and re-test; drop any that are fixed
 ignore:
   # captree (Go 1.25.3 stdlib): upstream Arch package, awaiting rebuild
   - vulnerability: CVE-2025-61726
@@ -11,6 +11,9 @@ ignore:
   - vulnerability: CVE-2025-61732
   - vulnerability: CVE-2025-68119
   - vulnerability: CVE-2025-68121
+  - vulnerability: CVE-2026-25679
+  - vulnerability: CVE-2026-27139
+  - vulnerability: CVE-2026-27142
   # lint-css: js-yaml. Upstream Arch package
   - vulnerability: CVE-2025-64718
   # lint-markdown: markdown-it 14.1.0. Upstream Arch package, awaiting rebuild

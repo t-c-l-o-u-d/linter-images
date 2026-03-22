@@ -16,6 +16,9 @@ ignore:
   - vulnerability: CVE-2026-27142
   # lint-css: js-yaml. Upstream Arch package
   - vulnerability: CVE-2025-64718
+  # lint-css: flatted (stylelint dep). Upstream Arch package
+  - vulnerability: CVE-2026-32141
+  - vulnerability: CVE-2026-33228
   # lint-markdown: markdown-it 14.1.0. Upstream Arch package, awaiting rebuild
   - vulnerability: CVE-2026-2327
   # lint-css (stylelint), lint-javascript (eslint): ajv ReDoS. Upstream Arch package, fixed in 8.18.0

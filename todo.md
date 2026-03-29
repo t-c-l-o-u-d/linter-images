@@ -13,3 +13,17 @@
 - [ ] lint-openshift: OpenShift linting
 - [ ] lint-kustomize: Kustomize linting
 - [ ] lint-kubernetes: Kubernetes linting
+
+## New Work
+
+- [ ] Rewrite as a single Rust Binary
+      - system tools > podman > rootless docker > nspawn > rootful docker
+- [ ] Investigate biome?
+      - <https://biomejs.dev/internals/language-support/>
+- [ ] Split "fix" into:
+      - format
+            - cleans up like prettier
+      - ???
+            - something meaning best practices?
+            - fixing security issues?
+                  - shellharden comes to mind here

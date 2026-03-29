@@ -40,7 +40,11 @@ jobs:
         run: |
           IMAGE_INPUT="${{ inputs.image }}"
           if [[ -n "${IMAGE_INPUT}" ]]; then
-            echo "matrix=[{\"IMAGE_NAME\":\"${IMAGE_INPUT}\",\"IMAGE_DIR\":\"images/${IMAGE_INPUT}\"}]" >> "$GITHUB_OUTPUT"
+            echo "matrix=$(
+              jq --null-input --compact-output \
+                --arg name "${IMAGE_INPUT}" \
+                '[{IMAGE_NAME: $name, IMAGE_DIR: ("images/" + $name)}]'
+            )" >> "$GITHUB_OUTPUT"
           else
             echo "matrix=$(
               ls -d images/lint-* \

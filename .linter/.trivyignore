@@ -1,25 +1,2 @@
-# REVIEW-BY: 2026-04-05. Remove these and re-test; drop any that are fixed
-
-# captree (Go 1.25.3 stdlib): upstream Arch package, awaiting rebuild
-CVE-2025-61726
-CVE-2025-61727
-CVE-2025-61728
-CVE-2025-61729
-CVE-2025-61730
-CVE-2025-68121
-CVE-2026-25679
-CVE-2026-27142
-
-# lint-css: js-yaml. Upstream Arch package
-CVE-2025-64718
-# lint-css: flatted (stylelint dep). Upstream Arch package, fixed in 3.4.0
-CVE-2026-32141
-
-# lint-markdown: markdown-it ReDoS. Upstream Arch package, fixed in 14.1.1
-CVE-2026-2327
-
-# lint-vim: jaraco.context. Upstream Arch package
-CVE-2026-23949
-
-# lint-css (stylelint), lint-javascript (eslint): ajv ReDoS. Upstream Arch package, fixed in 8.18.0
-CVE-2025-69873
+# REVIEW-BY: 2026-04-26. Remove these and re-test; drop any that are fixed
+# No active ignores — all prior CVEs resolved as of 2026-03-29

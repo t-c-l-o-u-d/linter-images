@@ -1,25 +1,10 @@
 ---
-# REVIEW-BY: 2026-04-05. Remove these and re-test; drop any that are fixed
+# REVIEW-BY: 2026-04-26. Remove these and re-test; drop any that are fixed
 ignore:
-  # captree (Go 1.25.3 stdlib): upstream Arch package, awaiting rebuild
-  - vulnerability: CVE-2025-61726
-  - vulnerability: CVE-2025-61727
-  - vulnerability: CVE-2025-61728
-  - vulnerability: CVE-2025-61729
-  - vulnerability: CVE-2025-61730
-  - vulnerability: CVE-2025-61731
-  - vulnerability: CVE-2025-61732
-  - vulnerability: CVE-2025-68119
-  - vulnerability: CVE-2025-68121
-  - vulnerability: CVE-2026-25679
-  - vulnerability: CVE-2026-27139
-  - vulnerability: CVE-2026-27142
-  # lint-css: js-yaml. Upstream Arch package
-  - vulnerability: CVE-2025-64718
-  # lint-css: flatted (stylelint dep). Upstream Arch package
-  - vulnerability: CVE-2026-32141
-  - vulnerability: CVE-2026-33228
-  # lint-markdown: markdown-it 14.1.0. Upstream Arch package, awaiting rebuild
-  - vulnerability: CVE-2026-2327
-  # lint-css (stylelint), lint-javascript (eslint): ajv ReDoS. Upstream Arch package, fixed in 8.18.0
-  - vulnerability: CVE-2025-69873
+  # lint-css: picomatch (stylelint dep). Upstream Arch package, fixed in 2.3.2
+  - vulnerability: CVE-2026-33671
+  - vulnerability: CVE-2026-33672
+  # lint-markdown: smol-toml (markdownlint-cli2 dep). Upstream Arch package, fixed in 1.6.1
+  - vulnerability: GHSA-v3rj-xjv7-4jmq
+  # lint-javascript: brace-expansion (eslint dep). Upstream Arch package, fixed in 1.1.13
+  - vulnerability: CVE-2026-33750

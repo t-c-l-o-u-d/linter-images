@@ -184,6 +184,11 @@ consulting web documentation.
   has passed, remove all listed CVEs, re-run the
   pipeline, and only re-add any that still appear.
   Never let ignored CVEs go stale.
+- Never trust the CVE review workflow report alone.
+  Always trigger a full build (`gh workflow run Main`)
+  and verify scan results before removing CVEs from
+  ignore lists. The review workflow can give false
+  negatives.
 - Never assume CVE overlap between scanners. Only
   add a CVE to a scanner's ignore list after that
   specific scanner has reported it. Trivy and Grype

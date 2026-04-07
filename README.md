@@ -1,3 +1,5 @@
+# ⚠️⚠️ This repository will be archived and replaced with [https://github.com/t-c-l-o-u-d/vlint](https://github.com/t-c-l-o-u-d/vlint) on/before December 31st, 2026. ⚠️⚠️
+
 # linter-images
 
 [![Main](https://github.com/t-c-l-o-u-d/linter-images/actions/workflows/main.yaml/badge.svg)](https://github.com/t-c-l-o-u-d/linter-images/actions/workflows/main.yaml)

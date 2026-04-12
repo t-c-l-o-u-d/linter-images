@@ -9,16 +9,16 @@ header
 mapfile -t json_files < <(git ls-files '*.json')
 
 if [[ ${#json_files[@]} -eq 0 ]]; then
-    echo "No JSON files found, skipping."
-    exit 0
+  echo "No JSON files found, skipping."
+  exit 0
 fi
 
 echo "Running jq format..."
 for f in "${json_files[@]}"; do
-    printf "  %s\n" "$f"
-    tmp="${f}.tmp"
-    jq . "$f" > "$tmp"
-    mv "$tmp" "$f"
+  printf "  %s\n" "$f"
+  tmp="${f}.tmp"
+  jq . "$f" >"$tmp"
+  mv "$tmp" "$f"
 done
 
 echo "Done. Run lint to verify."

@@ -15,4 +15,4 @@ fi
 while IFS= read -r CACHE_ID; do
   echo "Deleting cache ${CACHE_ID}"
   gh cache delete "$CACHE_ID" || true
-done <<< "$CACHE_IDS"
+done <<<"$CACHE_IDS"

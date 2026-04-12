@@ -9,8 +9,8 @@ header
 mapfile -t md_files < <(git ls-files '*.md')
 
 if [[ ${#md_files[@]} -eq 0 ]]; then
-    echo "No markdown files found, skipping."
-    exit 0
+  echo "No markdown files found, skipping."
+  exit 0
 fi
 
 errors=0
@@ -18,34 +18,34 @@ errors=0
 echo "Running markdownlint-cli2..."
 mdl_args=()
 if [[ -f .linter/.markdownlint-cli2.yaml ]]; then
-    mdl_args+=(--config .linter/.markdownlint-cli2.yaml)
+  mdl_args+=(--config .linter/.markdownlint-cli2.yaml)
 elif [[ -f .linters/markdownlint-cli2.yaml ]]; then
-    # markdownlint-cli2 requires config filenames to match its dotfile
-    # convention; copy to a temp file with the expected name
-    mdl_config="$(mktemp --directory)/.markdownlint-cli2.yaml"
-    cp .linters/markdownlint-cli2.yaml "$mdl_config"
-    mdl_args+=(--config "$mdl_config")
+  # markdownlint-cli2 requires config filenames to match its dotfile
+  # convention; copy to a temp file with the expected name
+  mdl_config="$(mktemp --directory)/.markdownlint-cli2.yaml"
+  cp .linters/markdownlint-cli2.yaml "$mdl_config"
+  mdl_args+=(--config "$mdl_config")
 elif [[ -f .markdownlint-cli2.yaml ]]; then
-    mdl_args+=(--config .markdownlint-cli2.yaml)
+  mdl_args+=(--config .markdownlint-cli2.yaml)
 fi
 tool_errors=0
 for f in "${md_files[@]}"; do
-    if ! markdownlint-cli2 "${mdl_args[@]}" "$f"; then
-        printf "  FAIL: %s\n" "$f"
-        tool_errors=$((tool_errors + 1))
-    else
-        printf "  PASS: %s\n" "$f"
-    fi
+  if ! markdownlint-cli2 "${mdl_args[@]}" "$f"; then
+    printf "  FAIL: %s\n" "$f"
+    tool_errors=$((tool_errors + 1))
+  else
+    printf "  PASS: %s\n" "$f"
+  fi
 done
 if ((tool_errors > 0)); then
-    printf "FAIL: markdownlint-cli2 (%d file(s))\n" "$tool_errors"
-    errors=$((errors + 1))
+  printf "FAIL: markdownlint-cli2 (%d file(s))\n" "$tool_errors"
+  errors=$((errors + 1))
 else
-    printf "PASS: markdownlint-cli2\n"
+  printf "PASS: markdownlint-cli2\n"
 fi
 
 if [[ $errors -gt 0 ]]; then
-    echo ""
-    echo "Markdown linting failed with $errors error(s)"
-    exit 1
+  echo ""
+  echo "Markdown linting failed with $errors error(s)"
+  exit 1
 fi

@@ -1,9 +1,7 @@
 ---
 # GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
 # Main workflow for building and pruning linter images.
-
 name: Main
-
 on:
   schedule:
     - cron: '38 22 */3 * *'
@@ -14,11 +12,9 @@ on:
         required: false
         type: string
         default: ''
-
 permissions:
   contents: read
   packages: write
-
 jobs:
   build-base:
     name: Build Base Image
@@ -27,7 +23,6 @@ jobs:
       IMAGE_NAME: "base-linter"
       IMAGE_DIR: "images/base-linter"
     secrets: inherit
-
   discover:
     name: Discover Linter Images
     runs-on: ubuntu-latest
@@ -52,7 +47,6 @@ jobs:
                 '[split("\n")[] | select(. != "") | {IMAGE_NAME: split("/")[-1], IMAGE_DIR: .}]'
             )" >> "$GITHUB_OUTPUT"
           fi
-
   build-linters:
     name: Build and Prune Images
     needs: [build-base, discover]
@@ -65,7 +59,6 @@ jobs:
       IMAGE_NAME: ${{ matrix.IMAGE_NAME }}
       IMAGE_DIR: ${{ matrix.IMAGE_DIR }}
     secrets: inherit
-
   cleanup-caches:
     name: Cleanup Caches
     if: always()

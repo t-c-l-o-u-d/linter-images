@@ -1,9 +1,7 @@
 ---
 # GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
 # Build and prune images using Buildah and GitHub Container Registry API.
-
 name: Build, Scan, and Prune
-
 on:
   workflow_call:
     inputs:
@@ -13,11 +11,9 @@ on:
       IMAGE_DIR:
         required: true
         type: string
-
 concurrency:
   group: build-${{ inputs.IMAGE_NAME }}
   cancel-in-progress: false
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -107,7 +103,7 @@ jobs:
     steps:
       - name: Prune all but the most recent 3 images
         shell: bash
-        run: |
+        run: |-
           # URL-encode the package name (repo/image uses %2F for the slash)
           PACKAGE_NAME="${{ github.event.repository.name }}%2F${{ inputs.IMAGE_NAME }}"
 

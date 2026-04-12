@@ -1,18 +1,14 @@
 ---
 # GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
 # Check for new hadolint releases and open an issue if outdated.
-
 name: Check Hadolint Update
-
 on:
   schedule:
     - cron: '0 8 * * 1'
   workflow_dispatch:
-
 permissions:
   contents: read
   issues: write
-
 jobs:
   check:
     runs-on: ubuntu-latest

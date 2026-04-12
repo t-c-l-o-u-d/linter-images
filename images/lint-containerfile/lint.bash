@@ -9,19 +9,19 @@ header
 # find Containerfiles/Dockerfiles, skip template extensions
 all_containerfiles=()
 mapfile -t all_containerfiles < <(git ls-files \
-    'Containerfile' 'Containerfile.*' 'Dockerfile' 'Dockerfile.*' \
-    '**/Containerfile' '**/Containerfile.*' '**/Dockerfile' '**/Dockerfile.*')
+  'Containerfile' 'Containerfile.*' 'Dockerfile' 'Dockerfile.*' \
+  '**/Containerfile' '**/Containerfile.*' '**/Dockerfile' '**/Dockerfile.*')
 containerfiles=()
 for f in "${all_containerfiles[@]}"; do
-    case "${f##*.}" in
-        j2|gotemplate|erb|tpl|tmpl) continue ;;
-    esac
-    containerfiles+=("$f")
+  case "${f##*.}" in
+  j2 | gotemplate | erb | tpl | tmpl) continue ;;
+  esac
+  containerfiles+=("$f")
 done
 
 if [[ ${#containerfiles[@]} -eq 0 ]]; then
-    echo "No Containerfiles found, skipping."
-    exit 0
+  echo "No Containerfiles found, skipping."
+  exit 0
 fi
 
 errors=0
@@ -29,30 +29,30 @@ errors=0
 echo "Running hadolint..."
 hadolint_args=()
 if [[ -f .linter/.hadolint.yaml ]]; then
-    hadolint_args+=(--config .linter/.hadolint.yaml)
+  hadolint_args+=(--config .linter/.hadolint.yaml)
 elif [[ -f .linters/hadolint.yaml ]]; then
-    hadolint_args+=(--config .linters/hadolint.yaml)
+  hadolint_args+=(--config .linters/hadolint.yaml)
 elif [[ -f .hadolint.yaml ]]; then
-    hadolint_args+=(--config .hadolint.yaml)
+  hadolint_args+=(--config .hadolint.yaml)
 fi
 tool_errors=0
 for f in "${containerfiles[@]}"; do
-    if ! hadolint "${hadolint_args[@]}" "$f"; then
-        printf "  FAIL: %s\n" "$f"
-        tool_errors=$((tool_errors + 1))
-    else
-        printf "  PASS: %s\n" "$f"
-    fi
+  if ! hadolint "${hadolint_args[@]}" "$f"; then
+    printf "  FAIL: %s\n" "$f"
+    tool_errors=$((tool_errors + 1))
+  else
+    printf "  PASS: %s\n" "$f"
+  fi
 done
 if ((tool_errors > 0)); then
-    printf "FAIL: hadolint (%d file(s))\n" "$tool_errors"
-    errors=$((errors + 1))
+  printf "FAIL: hadolint (%d file(s))\n" "$tool_errors"
+  errors=$((errors + 1))
 else
-    printf "PASS: hadolint\n"
+  printf "PASS: hadolint\n"
 fi
 
 if [[ $errors -gt 0 ]]; then
-    echo ""
-    echo "Containerfile linting failed with $errors error(s)"
-    exit 1
+  echo ""
+  echo "Containerfile linting failed with $errors error(s)"
+  exit 1
 fi

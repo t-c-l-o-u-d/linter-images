@@ -1,20 +1,16 @@
 ---
 # GNU Affero General Public License v3.0 or later (see COPYING or https://www.gnu.org/licenses/agpl.txt)
 # Selectively rebuild container images whose source files changed on push.
-
 name: Push
-
 on:
   push:
     branches:
       - main
     paths:
       - 'images/**'
-
 permissions:
   contents: read
   packages: write
-
 jobs:
   detect:
     name: Detect Changed Images
@@ -92,7 +88,6 @@ jobs:
           else
             echo "has_linters=false" >> "${GITHUB_OUTPUT}"
           fi
-
   # Always rebuild base so child images get a fresh foundation
   build-base:
     name: Build Base Image
@@ -101,7 +96,6 @@ jobs:
       IMAGE_NAME: "base-linter"
       IMAGE_DIR: "images/base-linter"
     secrets: inherit
-
   build-linters:
     name: Build Changed Linters
     needs: [detect, build-base]

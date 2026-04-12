@@ -7,25 +7,25 @@ source /usr/local/lib/linter-header.bash
 header
 
 if [[ ! -f Cargo.toml ]]; then
-    echo "No Cargo.toml found, skipping."
-    exit 0
+  echo "No Cargo.toml found, skipping."
+  exit 0
 fi
 
 # List project files being fixed
 mapfile -t rs_files < <(git ls-files '*.rs' 'Cargo.toml')
 printf "Files:\n"
 for f in "${rs_files[@]}"; do
-    printf "  %s\n" "$f"
+  printf "  %s\n" "$f"
 done
 echo ""
 
 echo "Running cargo clippy --fix..."
 cargo clippy \
-    --fix \
-    --allow-dirty \
-    --allow-staged \
-    --all-features \
-    --quiet
+  --fix \
+  --allow-dirty \
+  --allow-staged \
+  --all-features \
+  --quiet
 
 echo "Running cargo fmt..."
 cargo fmt

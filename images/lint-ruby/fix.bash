@@ -9,27 +9,27 @@ header
 mapfile -t ruby_files < <(git ls-files '*.rb' '*.gemspec' '*.rake' 'Gemfile' 'Rakefile')
 
 if [[ ${#ruby_files[@]} -eq 0 ]]; then
-    echo "No Ruby files found, skipping."
-    exit 0
+  echo "No Ruby files found, skipping."
+  exit 0
 fi
 
 echo "Running rubocop --autocorrect..."
 rubocop_args=(
-    --require rubocop-performance
-    --require rubocop-rake
-    --require rubocop-rspec
-    --autocorrect
+  --require rubocop-performance
+  --require rubocop-rake
+  --require rubocop-rspec
+  --autocorrect
 )
 if [[ -f .linter/.rubocop.yml ]]; then
-    rubocop_args+=(--config .linter/.rubocop.yml)
+  rubocop_args+=(--config .linter/.rubocop.yml)
 elif [[ -f .linters/rubocop.yml ]]; then
-    rubocop_args+=(--config .linters/rubocop.yml)
+  rubocop_args+=(--config .linters/rubocop.yml)
 elif [[ -f .rubocop.yml ]]; then
-    rubocop_args+=(--config .rubocop.yml)
+  rubocop_args+=(--config .rubocop.yml)
 fi
 for f in "${ruby_files[@]}"; do
-    printf "  %s\n" "$f"
-    rubocop "${rubocop_args[@]}" "$f" || true
+  printf "  %s\n" "$f"
+  rubocop "${rubocop_args[@]}" "$f" || true
 done
 
 echo "Done. Run lint to verify."

@@ -9,8 +9,8 @@ header
 mapfile -t py_files < <(git ls-files '*.py')
 
 if [[ ${#py_files[@]} -eq 0 ]]; then
-    echo "No Python files found, skipping."
-    exit 0
+  echo "No Python files found, skipping."
+  exit 0
 fi
 
 errors=0
@@ -18,109 +18,109 @@ errors=0
 echo "Running ruff check..."
 ruff_args=()
 if [[ -f .linter/ruff.toml ]]; then
-    ruff_args+=(--config .linter/ruff.toml)
+  ruff_args+=(--config .linter/ruff.toml)
 elif [[ -f .linters/ruff.toml ]]; then
-    ruff_args+=(--config .linters/ruff.toml)
+  ruff_args+=(--config .linters/ruff.toml)
 elif [[ -f ruff.toml ]]; then
-    ruff_args+=(--config ruff.toml)
+  ruff_args+=(--config ruff.toml)
 fi
 tool_errors=0
 for f in "${py_files[@]}"; do
-    if ! ruff check "${ruff_args[@]}" "$f"; then
-        printf "  FAIL: %s\n" "$f"
-        tool_errors=$((tool_errors + 1))
-    else
-        printf "  PASS: %s\n" "$f"
-    fi
+  if ! ruff check "${ruff_args[@]}" "$f"; then
+    printf "  FAIL: %s\n" "$f"
+    tool_errors=$((tool_errors + 1))
+  else
+    printf "  PASS: %s\n" "$f"
+  fi
 done
 if ((tool_errors > 0)); then
-    printf "FAIL: ruff check (%d file(s))\n" "$tool_errors"
-    errors=$((errors + 1))
+  printf "FAIL: ruff check (%d file(s))\n" "$tool_errors"
+  errors=$((errors + 1))
 else
-    printf "PASS: ruff check\n"
+  printf "PASS: ruff check\n"
 fi
 
 echo ""
 echo "Running ruff format --check..."
 tool_errors=0
 for f in "${py_files[@]}"; do
-    if ! ruff format --check "${ruff_args[@]}" "$f"; then
-        printf "  FAIL: %s\n" "$f"
-        tool_errors=$((tool_errors + 1))
-    else
-        printf "  PASS: %s\n" "$f"
-    fi
+  if ! ruff format --check "${ruff_args[@]}" "$f"; then
+    printf "  FAIL: %s\n" "$f"
+    tool_errors=$((tool_errors + 1))
+  else
+    printf "  PASS: %s\n" "$f"
+  fi
 done
 if ((tool_errors > 0)); then
-    printf "FAIL: ruff format (%d file(s))\n" "$tool_errors"
-    errors=$((errors + 1))
+  printf "FAIL: ruff format (%d file(s))\n" "$tool_errors"
+  errors=$((errors + 1))
 else
-    printf "PASS: ruff format\n"
+  printf "PASS: ruff format\n"
 fi
 
 echo ""
 echo "Running mypy..."
 mypy_args=(--strict)
 if [[ -f .linter/mypy.ini ]]; then
-    mypy_args+=(--config-file .linter/mypy.ini)
+  mypy_args+=(--config-file .linter/mypy.ini)
 elif [[ -f .linters/mypy.ini ]]; then
-    mypy_args+=(--config-file .linters/mypy.ini)
+  mypy_args+=(--config-file .linters/mypy.ini)
 elif [[ -f mypy.ini ]]; then
-    mypy_args+=(--config-file mypy.ini)
+  mypy_args+=(--config-file mypy.ini)
 fi
 
 mypy_output=$(mypy "${mypy_args[@]}" --output json \
-    "${py_files[@]}" 2>/dev/null) || true
+  "${py_files[@]}" 2>/dev/null) || true
 mypy_output="${mypy_output:-}"
 
 tool_errors=0
 for f in "${py_files[@]}"; do
-    file_violations=$(jq --raw-output --arg f "$f" \
-        'select(.file == $f) | "\(.file):\(.line):\(.column): \(.severity): \(.message) [\(.code)]"' \
-        <<< "$mypy_output")
-    if [[ -n "$file_violations" ]]; then
-        printf "%s\n" "$file_violations"
-        printf "  FAIL: %s\n" "$f"
-        tool_errors=$((tool_errors + 1))
-    else
-        printf "  PASS: %s\n" "$f"
-    fi
+  file_violations=$(jq --raw-output --arg f "$f" \
+    'select(.file == $f) | "\(.file):\(.line):\(.column): \(.severity): \(.message) [\(.code)]"' \
+    <<<"$mypy_output")
+  if [[ -n "$file_violations" ]]; then
+    printf "%s\n" "$file_violations"
+    printf "  FAIL: %s\n" "$f"
+    tool_errors=$((tool_errors + 1))
+  else
+    printf "  PASS: %s\n" "$f"
+  fi
 done
 if ((tool_errors > 0)); then
-    printf "FAIL: mypy (%d file(s))\n" "$tool_errors"
-    errors=$((errors + 1))
+  printf "FAIL: mypy (%d file(s))\n" "$tool_errors"
+  errors=$((errors + 1))
 else
-    printf "PASS: mypy\n"
+  printf "PASS: mypy\n"
 fi
 
 echo ""
 echo "Running bandit..."
 bandit_args=(--quiet)
 if [[ -f .linter/.bandit ]]; then
-    bandit_args+=(--configfile .linter/.bandit)
+  bandit_args+=(--configfile .linter/.bandit)
 elif [[ -f .linters/bandit ]]; then
-    bandit_args+=(--configfile .linters/bandit)
+  bandit_args+=(--configfile .linters/bandit)
 elif [[ -f .bandit ]]; then
-    bandit_args+=(--configfile .bandit)
+  bandit_args+=(--configfile .bandit)
 fi
 tool_errors=0
 for f in "${py_files[@]}"; do
-    if ! bandit "${bandit_args[@]}" "$f"; then
-        printf "  FAIL: %s\n" "$f"
-        tool_errors=$((tool_errors + 1))
-    else
-        printf "  PASS: %s\n" "$f"
-    fi
+  if ! bandit "${bandit_args[@]}" "$f"; then
+    printf "  FAIL: %s\n" "$f"
+    tool_errors=$((tool_errors + 1))
+  else
+    printf "  PASS: %s\n" "$f"
+  fi
 done
 if ((tool_errors > 0)); then
-    printf "FAIL: bandit (%d file(s))\n" "$tool_errors"
-    errors=$((errors + 1))
+  printf "FAIL: bandit (%d file(s))\n" "$tool_errors"
+  errors=$((errors + 1))
 else
-    printf "PASS: bandit\n"
+  printf "PASS: bandit\n"
 fi
 
 if [[ $errors -gt 0 ]]; then
-    echo ""
-    echo "Python linting failed with $errors error(s)"
-    exit 1
+  echo ""
+  echo "Python linting failed with $errors error(s)"
+  exit 1
 fi
